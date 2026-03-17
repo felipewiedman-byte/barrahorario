@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Sol = Día · Luna = Noche · Tuluá</title>
+<title>Solar Bar · 4:00 AM · Amanecer · Tuluá</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -20,7 +20,7 @@ body{
 .solar-bar{
   width:580px;
   height:130px;
-  border-radius:0px;
+  border-radius:24px;
   overflow:visible;
   position:relative;
 }
@@ -30,7 +30,7 @@ body{
   position:absolute;
   width:100%;
   height:100%;
-  border-radius:0px;
+  border-radius:24px;
   overflow:hidden;
   z-index:1;
 }
@@ -64,7 +64,7 @@ body{
   z-index:3;
   pointer-events:none;
   overflow:hidden;
-  border-radius:0px;
+  border-radius:24px;
 }
 
 .mascara-noche::before{
@@ -78,7 +78,6 @@ body{
     rgba(10,20,36,0) 50%,
     rgba(10,20,36,0.8) 80%,
     rgba(10,20,36,1) 100%);
-  /* ANIMACIÓN ELIMINADA - ahora se mueve con JS */
   transition:transform 0.1s linear;
   opacity:1;
   z-index:3;
@@ -100,9 +99,9 @@ body{
   width:100%;
   height:100%;
   z-index:5;
-  opacity:0;
+  opacity:0.6; /* Aumentado para que se vean en el amanecer */
   transition:opacity 0.5s ease;
-  border-radius:0px;
+  border-radius:24px;
   overflow:hidden;
   pointer-events:none;
 }
@@ -372,7 +371,7 @@ body{
       <span class="temperatura" id="temperatura">--°</span>
       <span class="descripcion" id="clima-desc">TULUÁ</span>
     </div>
-    <div class="hora" id="hora-info">--:--:--</div>
+    <div class="hora" id="hora-info">04:00:00</div>  <!-- HORA FIJA 4:00 AM -->
   </div>
 
   <div class="horas">
@@ -382,8 +381,8 @@ body{
 
   <div class="divider"></div>
 
-  <!-- SOL -->
-  <div id="sol" class="astro">
+  <!-- SOL (A LAS 4 AM ESTA EN EL HORIZONTE, CASI AMANECIENDO) -->
+  <div id="sol" class="astro" style="left:16.67%"> <!-- 4/24 = 16.67% -->
     <svg viewBox="0 0 48 48">
       <defs>
         <radialGradient id="sol-grad" cx="30%" cy="30%" r="70%">
@@ -396,11 +395,11 @@ body{
       <circle cx="24" cy="24" r="20" fill="url(#sol-grad)" />
       <circle cx="24" cy="24" r="24" fill="none" stroke="#FFD966" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.4" />
     </svg>
-    <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
+    <div id="solTag" class="tag sol-tag">☀️ 04:00</div>
   </div>
 
-  <!-- LUNA -->
-  <div id="luna" class="astro">
+  <!-- LUNA (A LAS 4 AM LA LUNA ESTA EN POSICIÓN OPUESTA, 4+12=16 -> 16/24=66.67%) -->
+  <div id="luna" class="astro" style="left:66.67%"> <!-- 16/24 = 66.67% -->
     <svg viewBox="0 0 48 48">
       <defs>
         <radialGradient id="luna-grad" cx="30%" cy="30%" r="60%">
@@ -435,224 +434,28 @@ body{
       <circle cx="30" cy="26" r="5.5" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
       <circle cx="22" cy="13" r="5" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
     </svg>
-    <div id="lunaTag" class="tag luna-tag">🌑 00:00</div>
+    <div id="lunaTag" class="tag luna-tag">🌑 16:00</div>
   </div>
 
 </div>
 
 <script>
-const sol = document.getElementById("sol");
-const luna = document.getElementById("luna");
-const solTag = document.getElementById("solTag");
-const lunaTag = document.getElementById("lunaTag");
-const sombraMovil = document.getElementById("sombra-movil");
-const temperaturaEl = document.getElementById("temperatura");
-const climaDescEl = document.getElementById("clima-desc");
-const horaInfoEl = document.getElementById("hora-info");
-const estrellas = document.getElementById("estrellas");
+// CÓDIGO MÍNIMO PARA QUE LA MÁSCARA SIGA A LA LUNA EN 4:00 AM
 const mascaraNoche = document.getElementById("mascaraNoche");
-const climaCapa = document.getElementById("climaCapa");
+const estrellas = document.getElementById("estrellas");
 
-const API_KEY = '788dd3b3a00a8c60f64f75bd2f0c33f0';
-const LAT = '4.0929';
-const LON = '-76.2165';
+// Para las 4:00 AM, la Luna está en posición 16/24 = 0.6667
+let posLuna = 16/24; // 0.6667
 
-let climaActual = '';
+// Calcular desplazamiento de la máscara (fórmula igual que antes)
+let desplazamiento = (posLuna * 60) - 30; // Rango: -30% a +30%
+mascaraNoche.style.transform = `translateX(${desplazamiento}%)`;
 
-function getHoraColombia(){
-  return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
-}
+// Estrellas con opacidad media (amanecer)
+estrellas.style.opacity = 0.4;
 
-function formatHora(h){
-  let H = Math.floor(h);
-  let m = Math.floor((h - H) * 60);
-  return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
-}
-
-function formatHoraConSegundos(now){
-  const horas = String(now.getHours()).padStart(2, '0');
-  const minutos = String(now.getMinutes()).padStart(2, '0');
-  const segundos = String(now.getSeconds()).padStart(2, '0');
-  return `${horas}:${minutos}:${segundos}`;
-}
-
-function calcularFaseLunar(){
-  const ahora = new Date();
-  const lunaNueva = new Date(Date.UTC(2024, 2, 6, 12, 0, 0));
-  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000;
-  return ((ahora - lunaNueva) / ciclo) % 1;
-}
-
-function actualizarMascaraLunar(fase){
-  if(!sombraMovil) return;
-  let cx;
-  if(fase < 0.5){
-    cx = 24 + (fase * 96);
-  } else {
-    cx = 72 - ((fase - 0.5) * 96);
-  }
-  cx = Math.max(0, Math.min(48, cx));
-  sombraMovil.setAttribute('cx', cx);
-}
-
-function getInfoFase(f){
-  if(f < 0.03 || f > 0.97) return ['🌑','Nueva'];
-  if(f < 0.23) return ['🌒','Creciente'];
-  if(f < 0.27) return ['🌓','Cuarto Creciente'];
-  if(f < 0.47) return ['🌔','Gibosa Creciente'];
-  if(f < 0.53) return ['🌕','Llena'];
-  if(f < 0.73) return ['🌖','Gibosa Menguante'];
-  if(f < 0.77) return ['🌗','Cuarto Menguante'];
-  return ['🌘','Menguante'];
-}
-
-function getClimaEmoji(desc){
-  const d = desc.toLowerCase();
-  if(d.includes('clear')||d.includes('despejado')) return '☀️';
-  if(d.includes('cloud')||d.includes('nube')) return '☁️';
-  if(d.includes('rain')||d.includes('lluvia')) return '🌧️';
-  if(d.includes('storm')||d.includes('tormenta')) return '⛈️';
-  if(d.includes('snow')||d.includes('nieve')) return '❄️';
-  if(d.includes('partly')||d.includes('parcial')) return '⛅';
-  return '🌤️';
-}
-
-// FUNCIONES PARA CLIMA DE FONDO
-function crearElementosClima(tipo, cantidad, esNoche){
-  const fragment = document.createDocumentFragment();
-  for(let i = 0; i < cantidad; i++){
-    let el;
-    if(tipo === 'lluvia'){
-      el = document.createElement('div');
-      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
-      el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = 0.5 + Math.random() * 0.5 + 's';
-      el.style.animationDelay = Math.random() * 2 + 's';
-      el.style.height = 8 + Math.random() * 12 + 'px';
-    }
-    if(tipo === 'tormenta'){
-      el = document.createElement('div');
-      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
-      el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = 0.3 + Math.random() * 0.3 + 's';
-      el.style.height = 10 + Math.random() * 10 + 'px';
-    }
-    if(tipo === 'nube'){
-      el = document.createElement('div');
-      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 50 + Math.random() * 50 + 'px';
-      el.style.height = 15 + Math.random() * 20 + 'px';
-      el.style.top = 10 + Math.random() * 50 + '%';
-      el.style.animationDuration = 12 + Math.random() * 10 + 's';
-      el.style.animationDelay = -i * 4 + 's';
-    }
-    if(tipo === 'nieve'){
-      el = document.createElement('div');
-      el.className = `copo ${esNoche ? 'gota-noche' : ''}`;
-      el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = 3 + Math.random() * 3 + 's';
-      el.style.animationDelay = Math.random() * 3 + 's';
-    }
-    if(el) fragment.appendChild(el);
-  }
-  return fragment;
-}
-
-function actualizarClimaFondo(desc, esNoche){
-  if(!climaCapa) return;
-  
-  while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
-  
-  const d = desc.toLowerCase();
-  if(d.includes('lluvia')){
-    climaCapa.appendChild(crearElementosClima('lluvia', 30, esNoche));
-  }
-  if(d.includes('tormenta')){
-    const rayo = document.createElement('div');
-    rayo.className = 'rayo';
-    climaCapa.appendChild(rayo);
-    climaCapa.appendChild(crearElementosClima('tormenta', 40, esNoche));
-  }
-  if(d.includes('nube') && !d.includes('parcial')){
-    climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
-  }
-  if(d.includes('nieve')){
-    climaCapa.appendChild(crearElementosClima('nieve', 30, esNoche));
-  }
-}
-
-function fetchClima(){
-  fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`)
-    .then(r => r.json())
-    .then(data => {
-      const temp = Math.round(data.main.temp);
-      const desc = data.weather[0].description;
-      const emoji = getClimaEmoji(desc);
-      temperaturaEl.innerHTML = `${temp}°`;
-      climaDescEl.innerHTML = `${emoji} ${desc.toUpperCase()}`;
-      
-      if(desc !== climaActual){
-        climaActual = desc;
-        const now = getHoraColombia();
-        const esNoche = now.getHours() < 6 || now.getHours() >= 18;
-        actualizarClimaFondo(desc, esNoche);
-      }
-    })
-    .catch(() => {
-      temperaturaEl.innerHTML = '24°';
-      climaDescEl.innerHTML = '🌤️ TULUÁ';
-    });
-}
-
-// ===== FUNCIÓN CORREGIDA: LA MÁSCARA SIGUE A LA LUNA =====
-function actualizarMascaraConLuna(posLuna){
-  // La máscara tiene 200% de ancho
-  // Mapeamos posLuna (0-1) a un rango de -30% a +30% para que no se salga
-  let desplazamiento = (posLuna * 60) - 30; // Rango: -30% a +30%
-  mascaraNoche.style.transform = `translateX(${desplazamiento}%)`;
-  
-  // Estrellas más visibles donde está la Luna
-  let intensidad = Math.abs(posLuna - 0.5) * 1.5;
-  estrellas.style.opacity = Math.min(0.5, intensidad);
-}
-
-function actualizar(){
-  let now = getHoraColombia();
-  let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
-  let esNoche = now.getHours() < 6 || now.getHours() >= 18;
-
-  let solPos = h / 24;
-  let lunaPos = (h + 12) / 24;
-  if(lunaPos > 1) lunaPos -= 1;
-
-  sol.style.left = (solPos * 100) + "%";
-  luna.style.left = (lunaPos * 100) + "%";
-
-  solTag.innerHTML = `☀️ ${formatHora(h)}`;
-  
-  const fase = calcularFaseLunar();
-  const [emoji, nombre] = getInfoFase(fase);
-  lunaTag.innerHTML = `${emoji} ${formatHora((h+12)%24)}`;
-
-  actualizarMascaraLunar(fase);
-  horaInfoEl.innerHTML = formatHoraConSegundos(now);
-  
-  // LA MÁSCARA SIGUE A LA LUNA (sin animación automática)
-  actualizarMascaraConLuna(lunaPos);
-  
-  // Actualizar clima de fondo si cambia día/noche
-  if(esNoche !== window.esNocheAnterior){
-    window.esNocheAnterior = esNoche;
-    if(climaActual) actualizarClimaFondo(climaActual, esNoche);
-  }
-}
-
-// Iniciar
-window.esNocheAnterior = getHoraColombia().getHours() < 6 || getHoraColombia().getHours() >= 18;
-fetchClima();
-setInterval(fetchClima, 600000);
-setInterval(actualizar, 100);
-actualizar();
+// Valores fijos para que se vea bien
+console.log("Amanecer - 4:00 AM - Sol en 16.67%, Luna en 66.67%");
 </script>
 
 </body>
