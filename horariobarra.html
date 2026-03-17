@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Sol = Día · Luna = Noche · Tuluá</title>
+<title>Solar Bar · Tiempo Real · Máscaras Dentro · Tuluá</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -21,11 +21,11 @@ body{
   width:580px;
   height:130px;
   border-radius:24px;
-  overflow:visible;
+  overflow:hidden !important;  /* CAMBIADO: ahora oculta lo que se sale */
   position:relative;
 }
 
-/* FONDO DINÁMICO CON GRADIENTE QUE SIGUE AL SOL */
+/* FONDO DINÁMICO CON DOS CAPAS */
 .fondo-dinamico{
   position:absolute;
   width:100%;
@@ -55,13 +55,42 @@ body{
   z-index:2;
 }
 
-/* MÁSCARA QUE SIGUE A LA LUNA - SIN ANIMACIÓN AUTOMÁTICA */
-.mascara-noche{
+/* MÁSCARA QUE SIGUE AL SOL (DÍA) */
+.mascara-dia{
   position:absolute;
   width:100%;
   height:100%;
   background:transparent;
   z-index:3;
+  pointer-events:none;
+  overflow:hidden;
+  border-radius:24px;
+}
+
+.mascara-dia::before{
+  content:"";
+  position:absolute;
+  width:200%;
+  height:100%;
+  background:linear-gradient(90deg, 
+    rgba(58,123,213,0) 0%,    /* Transparente */
+    rgba(58,123,213,0.2) 15%,
+    rgba(58,123,213,0.5) 50%, /* Máximo día en el centro */
+    rgba(58,123,213,0.2) 85%,
+    rgba(58,123,213,0) 100%);
+  transition:transform 0.1s linear;
+  opacity:0.8;
+  z-index:3;
+  left:-50%;  /* Centrado: 200% de ancho con left -50% hace que cubra correctamente */
+}
+
+/* MÁSCARA QUE SIGUE A LA LUNA (NOCHE) */
+.mascara-noche{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:transparent;
+  z-index:4;
   pointer-events:none;
   overflow:hidden;
   border-radius:24px;
@@ -74,25 +103,14 @@ body{
   height:100%;
   background:linear-gradient(90deg, 
     rgba(10,20,36,1) 0%, 
-    rgba(10,20,36,0.8) 20%,
+    rgba(10,20,36,0.8) 15%,
     rgba(10,20,36,0) 50%,
-    rgba(10,20,36,0.8) 80%,
+    rgba(10,20,36,0.8) 85%,
     rgba(10,20,36,1) 100%);
-  /* ANIMACIÓN ELIMINADA - ahora se mueve con JS */
   transition:transform 0.1s linear;
-  opacity:1;
-  z-index:3;
-}
-
-.fondo::after{
-  content:"";
-  position:absolute;
-  right:0;
-  top:0;
-  width:50%;
-  height:100%;
-  background:linear-gradient(90deg, transparent, #0a1424 90%);
+  opacity:0.9;
   z-index:4;
+  left:-50%;  /* Centrado para que al desplazarse no se salga */
 }
 
 .estrellas{
@@ -255,10 +273,6 @@ body{
   z-index:9;
 }
 
-.solar-bar{
-  overflow:visible !important;
-}
-
 /* EFECTOS DE CLIMA */
 .gota{
   position:absolute;
@@ -345,7 +359,10 @@ body{
     <div class="capa-noche" id="capaNoche"></div>
   </div>
   
-  <!-- MÁSCARA QUE SIGUE A LA LUNA - CONTROLADA POR JS -->
+  <!-- MÁSCARA QUE SIGUE AL SOL (DÍA) -->
+  <div class="mascara-dia" id="mascaraDia"></div>
+  
+  <!-- MÁSCARA QUE SIGUE A LA LUNA (NOCHE) -->
   <div class="mascara-noche" id="mascaraNoche"></div>
 
   <!-- CAPA DE CLIMA -->
@@ -450,7 +467,10 @@ const temperaturaEl = document.getElementById("temperatura");
 const climaDescEl = document.getElementById("clima-desc");
 const horaInfoEl = document.getElementById("hora-info");
 const estrellas = document.getElementById("estrellas");
+const mascaraDia = document.getElementById("mascaraDia");
 const mascaraNoche = document.getElementById("mascaraNoche");
+const capaDia = document.getElementById("capaDia");
+const capaNoche = document.getElementById("capaNoche");
 const climaCapa = document.getElementById("climaCapa");
 
 const API_KEY = '788dd3b3a00a8c60f64f75bd2f0c33f0';
@@ -604,30 +624,24 @@ function fetchClima(){
     });
 }
 
-// ===== FUNCIÓN CORREGIDA: LA MÁSCARA SIGUE A LA LUNA =====
-function actualizarMascaraConLuna(posLuna){
-  // La máscara tiene 200% de ancho
-  // Mapeamos posLuna (0-1) a un rango de -30% a +30% para que no se salga
-  let desplazamiento = (posLuna * 60) - 30; // Rango: -30% a +30%
-  mascaraNoche.style.transform = `translateX(${desplazamiento}%)`;
-  
-  // Estrellas más visibles donde está la Luna
-  let intensidad = Math.abs(posLuna - 0.5) * 1.5;
-  estrellas.style.opacity = Math.min(0.5, intensidad);
-}
-
+// ===== FUNCIÓN PRINCIPAL - MÁSCARAS DENTRO DEL RECUADRO =====
 function actualizar(){
   let now = getHoraColombia();
   let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
   let esNoche = now.getHours() < 6 || now.getHours() >= 18;
 
+  // Posición del Sol (0 a 1)
   let solPos = h / 24;
+  
+  // Posición de la Luna (opuesta al Sol)
   let lunaPos = (h + 12) / 24;
   if(lunaPos > 1) lunaPos -= 1;
 
+  // Mover SOL y LUNA
   sol.style.left = (solPos * 100) + "%";
   luna.style.left = (lunaPos * 100) + "%";
 
+  // Etiquetas de hora
   solTag.innerHTML = `☀️ ${formatHora(h)}`;
   
   const fase = calcularFaseLunar();
@@ -637,8 +651,26 @@ function actualizar(){
   actualizarMascaraLunar(fase);
   horaInfoEl.innerHTML = formatHoraConSegundos(now);
   
-  // LA MÁSCARA SIGUE A LA LUNA (sin animación automática)
-  actualizarMascaraConLuna(lunaPos);
+  // ===== MÁSCARA DEL DÍA: SIGUE AL SOL =====
+  // El rango de desplazamiento es de -30% a +30% pero con left:-50% base
+  // Esto mantiene todo DENTRO del recuadro
+  let desplazamientoDia = (solPos * 60) - 30; // -30% a +30%
+  mascaraDia.style.transform = `translateX(${desplazamientoDia}%)`;
+  
+  // ===== MÁSCARA DE LA NOCHE: SIGUE A LA LUNA =====
+  let desplazamientoNoche = (lunaPos * 60) - 30;
+  mascaraNoche.style.transform = `translateX(${desplazamientoNoche}%)`;
+  
+  // ===== ESTRELLAS Y FONDOS =====
+  let factorNoche;
+  if (h >= 6 && h < 18) {
+    factorNoche = 0.2; // Día
+  } else {
+    factorNoche = 0.8; // Noche
+  }
+  estrellas.style.opacity = factorNoche * 0.7;
+  capaNoche.style.opacity = factorNoche;
+  capaDia.style.opacity = 1 - factorNoche;
   
   // Actualizar clima de fondo si cambia día/noche
   if(esNoche !== window.esNocheAnterior){
