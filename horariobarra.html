@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Solar Bar · Luna con Fases · Tuluá</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:transparent;
+  font-family:'Inter',sans-serif;
+}
+
+.solar-bar{
+  width:580px;
+  height:130px;
+  border-radius:24px;
+  overflow:visible; /* Cambiado de hidden a visible para que las burbujas se vean */
+  position:relative;
+}
+
+.fondo{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:linear-gradient(135deg, #3a7bd5, #1e3a5f, #0b1a2e);
+  border-radius:24px; /* Añadido border-radius */
+  overflow:hidden; /* Mantener hidden solo para el fondo */
+}
+
+.fondo::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:0;
+  width:50%;
+  height:100%;
+  background:linear-gradient(90deg, transparent, #0a1424 90%);
+}
+
+.estrellas{
+  position:absolute;
+  width:100%;
+  height:100%;
+  z-index:2;
+  opacity:0.4;
+  border-radius:24px;
+  overflow:hidden;
+}
+
+.estrellas span{
+  position:absolute;
+  width:2px;
+  height:2px;
+  background:#fff;
+  border-radius:50%;
+}
+
+.horizonte{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:40px;
+  background:linear-gradient(180deg, #3a2c24, #1e1612);
+  border-top:1px solid rgba(200,170,140,0.3);
+  z-index:5;
+  border-radius:0 0 24px 24px; /* Añadido border-radius inferior */
+}
+
+.info-bar{
+  position:absolute;
+  bottom:10px;
+  left:0;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 20px;
+  z-index:10;
+  color:#ffffff;
+  font-weight:300;
+  letter-spacing:0.5px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.5);
+  /* Eliminado pointer-events:none para que no interfiera con ElementStream */
+}
+
+.clima{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:13px;
+}
+
+.temperatura{
+  font-weight:500;
+  color:#ffecb3;
+  font-size:16px;
+}
+
+.descripcion{
+  text-transform:uppercase;
+  opacity:0.8;
+}
+
+.hora{
+  font-size:15px;
+  font-weight:400;
+  color:#e6eefa;
+  font-family: 'Inter', monospace;
+  letter-spacing: 1px;
+}
+
+.horas{
+  position:absolute;
+  top:10px;
+  left:0;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  padding:0 20px;
+  font-size:9px;
+  font-weight:400;
+  color:rgba(255,255,255,0.5);
+  z-index:10;
+  letter-spacing:0.5px;
+}
+
+.astro{
+  position:absolute;
+  top:45%;
+  transform:translate(-50%,-50%);
+  width:70px;
+  height:70px;
+  z-index:20;
+  transition:left 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+  animation:flotar 5s ease-in-out infinite;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+}
+
+@keyframes flotar{
+  0%{transform:translate(-50%,-50%) scale(1);}
+  50%{transform:translate(-50%,-56%) scale(1.02);}
+  100%{transform:translate(-50%,-50%) scale(1);}
+}
+
+.astro svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* CORREGIDO: Versión para ElementStream/OBS */
+.tag{
+  position:absolute;
+  font-size:10px;
+  font-weight:500; /* Aumentado peso de fuente */
+  color:#ffffff;
+  background:rgba(0,0,0,0.65); /* Fondo más sólido en lugar de backdrop-filter */
+  padding:5px 12px;
+  border-radius:40px;
+  white-space:nowrap;
+  z-index:25;
+  border:1px solid rgba(255,215,0,0.3); /* Borde dorado más visible */
+  letter-spacing:0.5px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.5); /* Sombra para destacar */
+  /* Eliminado backdrop-filter y pointer-events */
+}
+
+/* Versión hover opcional para debug (puedes quitarlo) */
+.tag:hover{
+  background:rgba(20,20,30,0.9);
+  border-color:rgba(255,215,0,0.6);
+}
+
+.sol-tag{
+  left:calc(100% + 10px);
+  top:50%;
+  transform:translateY(-50%);
+}
+
+.luna-tag{
+  right:calc(100% + 10px);
+  top:50%;
+  transform:translateY(-50%);
+}
+
+.divider{
+  position:absolute;
+  left:50%;
+  top:0;
+  width:1px;
+  height:100%;
+  background:rgba(255,255,200,0.08);
+  z-index:2;
+}
+
+.linea{
+  position:absolute;
+  bottom:40px;
+  left:0;
+  width:100%;
+  height:1px;
+  background:rgba(255,220,150,0.15);
+  z-index:4;
+}
+
+/* Ajuste para que el contenedor no corte las burbujas */
+.solar-bar {
+  overflow: visible !important;
+}
+
+/* Asegurar que el fondo no corte las burbujas */
+.fondo, .estrellas, .horizonte {
+  overflow: hidden; /* Solo estos elementos internos mantienen overflow hidden */
+}
+</style>
+</head>
+
+<body>
+
+<div class="solar-bar">
+
+  <div class="fondo"></div>
+
+  <div class="estrellas">
+    <span style="top:15%;left:55%"></span>
+    <span style="top:25%;left:62%"></span>
+    <span style="top:35%;left:70%"></span>
+    <span style="top:45%;left:78%"></span>
+    <span style="top:55%;left:85%"></span>
+    <span style="top:20%;left:90%"></span>
+    <span style="top:65%;left:72%"></span>
+  </div>
+
+  <div class="horizonte"></div>
+  <div class="linea"></div>
+
+  <div class="info-bar">
+    <div class="clima">
+      <span class="temperatura" id="temperatura">--°</span>
+      <span class="descripcion" id="clima-desc">TULUÁ</span>
+    </div>
+    <div class="hora" id="hora-info">--:--:--</div>
+  </div>
+
+  <div class="horas">
+    <span>00</span> <span>03</span> <span>06</span> <span>09</span> <span>12</span>
+    <span>15</span> <span>18</span> <span>21</span> <span>24</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SOL -->
+  <div id="sol" class="astro">
+    <svg viewBox="0 0 48 48">
+      <defs>
+        <radialGradient id="sol-grad" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#FFD966" />
+          <stop offset="40%" stop-color="#FFA500" />
+          <stop offset="80%" stop-color="#FF4500" />
+          <stop offset="100%" stop-color="#FF8C00" />
+        </radialGradient>
+      </defs>
+      <circle cx="24" cy="24" r="20" fill="url(#sol-grad)" />
+      <circle cx="24" cy="24" r="24" fill="none" stroke="#FFD966" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.4" />
+    </svg>
+    <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
+  </div>
+
+  <!-- LUNA -->
+  <div id="luna" class="astro">
+    <svg viewBox="0 0 48 48">
+      <defs>
+        <radialGradient id="luna-grad" cx="30%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#FFFFFF" />
+          <stop offset="70%" stop-color="#FFF2A6" />
+          <stop offset="100%" stop-color="#E6D896" />
+        </radialGradient>
+        <radialGradient id="luna-sombra-grad" cx="30%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="#777777" />
+          <stop offset="70%" stop-color="#666666" />
+          <stop offset="100%" stop-color="#555555" />
+        </radialGradient>
+        <radialGradient id="crater-grad" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#D4C87C" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#B8A878" stop-opacity="0.3" />
+        </radialGradient>
+        
+        <mask id="mascara-fase">
+          <rect x="0" y="0" width="48" height="48" fill="white" />
+          <circle id="sombra-movil" cx="24" cy="24" r="24" fill="black" />
+        </mask>
+      </defs>
+      
+      <circle cx="24" cy="24" r="22" fill="url(#luna-grad)"/>
+      <circle cx="16" cy="17" r="6" fill="url(#crater-grad)"/>
+      <circle cx="30" cy="26" r="5.5" fill="url(#crater-grad)"/>
+      <circle cx="22" cy="13" r="5" fill="url(#crater-grad)"/>
+      
+      <circle cx="24" cy="24" r="22" fill="url(#luna-sombra-grad)" mask="url(#mascara-fase)"/>
+      
+      <circle cx="16" cy="17" r="6" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
+      <circle cx="30" cy="26" r="5.5" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
+      <circle cx="22" cy="13" r="5" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
+    </svg>
+    <div id="lunaTag" class="tag luna-tag">🌑 00:00</div>
+  </div>
+
+</div>
+
+<script>
+const sol = document.getElementById("sol");
+const luna = document.getElementById("luna");
+const solTag = document.getElementById("solTag");
+const lunaTag = document.getElementById("lunaTag");
+const sombraMovil = document.getElementById("sombra-movil");
+const temperaturaEl = document.getElementById("temperatura");
+const climaDescEl = document.getElementById("clima-desc");
+const horaInfoEl = document.getElementById("hora-info");
+
+const API_KEY = '788dd3b3a00a8c60f64f75bd2f0c33f0';
+const LAT = '4.0929';
+const LON = '-76.2165';
+
+function getHoraColombia(){
+  return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
+}
+
+function formatHora(h){
+  let H = Math.floor(h);
+  let m = Math.floor((h - H) * 60);
+  return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+function formatHoraConSegundos(now){
+  const horas = String(now.getHours()).padStart(2, '0');
+  const minutos = String(now.getMinutes()).padStart(2, '0');
+  const segundos = String(now.getSeconds()).padStart(2, '0');
+  return `${horas}:${minutos}:${segundos}`;
+}
+
+function calcularFaseLunar(){
+  const ahora = new Date();
+  const lunaNueva = new Date(Date.UTC(2024, 2, 6, 12, 0, 0));
+  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000;
+  return ((ahora - lunaNueva) / ciclo) % 1;
+}
+
+function actualizarMascaraLunar(fase){
+  if(!sombraMovil) return;
+  
+  let cx;
+  if(fase < 0.5){
+    cx = 24 + (fase * 96);
+  } else {
+    cx = 72 - ((fase - 0.5) * 96);
+  }
+  
+  cx = Math.max(0, Math.min(48, cx));
+  sombraMovil.setAttribute('cx', cx);
+}
+
+function getInfoFase(f){
+  if(f < 0.03 || f > 0.97) return ['🌑','Nueva'];
+  if(f < 0.23) return ['🌒','Creciente'];
+  if(f < 0.27) return ['🌓','Cuarto Creciente'];
+  if(f < 0.47) return ['🌔','Gibosa Creciente'];
+  if(f < 0.53) return ['🌕','Llena'];
+  if(f < 0.73) return ['🌖','Gibosa Menguante'];
+  if(f < 0.77) return ['🌗','Cuarto Menguante'];
+  return ['🌘','Menguante'];
+}
+
+function getClimaEmoji(desc){
+  const d = desc.toLowerCase();
+  if(d.includes('clear')||d.includes('despejado')) return '☀️';
+  if(d.includes('cloud')||d.includes('nube')) return '☁️';
+  if(d.includes('rain')||d.includes('lluvia')) return '🌧️';
+  if(d.includes('storm')||d.includes('tormenta')) return '⛈️';
+  if(d.includes('partly')||d.includes('parcial')) return '⛅';
+  return '🌤️';
+}
+
+function fetchClima(){
+  fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`)
+    .then(r => r.json())
+    .then(data => {
+      const temp = Math.round(data.main.temp);
+      const desc = data.weather[0].description;
+      const emoji = getClimaEmoji(desc);
+      temperaturaEl.innerHTML = `${temp}°`;
+      climaDescEl.innerHTML = `${emoji} ${desc.toUpperCase()}`;
+    })
+    .catch(() => {
+      temperaturaEl.innerHTML = '24°';
+      climaDescEl.innerHTML = '🌤️ TULUÁ';
+    });
+}
+
+function actualizar(){
+  let now = getHoraColombia();
+  let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+
+  let solPos = h / 24;
+  let lunaPos = (h + 12) / 24;
+  if(lunaPos > 1) lunaPos -= 1;
+
+  sol.style.left = (solPos * 100) + "%";
+  luna.style.left = (lunaPos * 100) + "%";
+
+  solTag.innerHTML = `☀️ ${formatHora(h)}`;
+  
+  const fase = calcularFaseLunar();
+  const [emoji, nombre] = getInfoFase(fase);
+  lunaTag.innerHTML = `${emoji} ${formatHora((h+12)%24)}`;
+
+  actualizarMascaraLunar(fase);
+
+  horaInfoEl.innerHTML = formatHoraConSegundos(now);
+}
+
+fetchClima();
+setInterval(fetchClima, 600000);
+setInterval(actualizar, 100);
+actualizar();
+</script>
+
+</body>
+</html>
