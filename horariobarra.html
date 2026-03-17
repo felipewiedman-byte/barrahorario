@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Luna con Fases · Tuluá</title>
+<title>Solar Bar · Clima Día/Noche · Tuluá</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -21,7 +21,7 @@ body{
   width:580px;
   height:130px;
   border-radius:24px;
-  overflow:visible; /* Cambiado de hidden a visible para que las burbujas se vean */
+  overflow:visible;
   position:relative;
 }
 
@@ -30,8 +30,10 @@ body{
   width:100%;
   height:100%;
   background:linear-gradient(135deg, #3a7bd5, #1e3a5f, #0b1a2e);
-  border-radius:24px; /* Añadido border-radius */
-  overflow:hidden; /* Mantener hidden solo para el fondo */
+  border-radius:24px;
+  overflow:hidden;
+  transition: background 1s ease;
+  z-index:1;
 }
 
 .fondo::after{
@@ -42,16 +44,108 @@ body{
   width:50%;
   height:100%;
   background:linear-gradient(90deg, transparent, #0a1424 90%);
+  z-index:1;
+}
+
+/* CAPA DE CLIMA (no interfiere con nada) */
+.clima-capa{
+  position:absolute;
+  width:100%;
+  height:100%;
+  z-index:2;
+  pointer-events:none;
+  overflow:hidden;
+  border-radius:24px;
+}
+
+/* GOTAS DE LLUVIA */
+.gota{
+  position:absolute;
+  width:2px;
+  background:rgba(255,255,255,0.6);
+  border-radius:0 0 5px 5px;
+  animation:llover linear infinite;
+}
+
+@keyframes llover{
+  0%{transform:translateY(-20px); opacity:0;}
+  20%{opacity:1;}
+  100%{transform:translateY(150px); opacity:0;}
+}
+
+/* GOTAS NOCTURNAS (más azuladas/plateadas) */
+.gota-noche{
+  background:rgba(200,220,255,0.5);
+}
+
+/* NUBES */
+.nube{
+  position:absolute;
+  background:rgba(255,255,255,0.2);
+  border-radius:50px;
+  filter:blur(8px);
+  animation:flotarNube linear infinite;
+}
+
+.nube-dia{
+  background:rgba(255,255,255,0.3);
+}
+
+.nube-noche{
+  background:rgba(100,120,150,0.25);
+}
+
+@keyframes flotarNube{
+  0%{left:-100px;}
+  100%{left:680px;}
+}
+
+/* RAYOS (solo tormenta) */
+.rayo{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:white;
+  opacity:0;
+  animation:relampago 6s infinite;
+}
+
+.rayo-noche{
+  background:#aaccff;
+}
+
+@keyframes relampago{
+  0%,95%,98%{opacity:0;}
+  96%{opacity:0.6;}
+  97%{opacity:0;}
+}
+
+/* COPOS DE NIEVE */
+.copo{
+  position:absolute;
+  width:4px;
+  height:4px;
+  background:white;
+  border-radius:50%;
+  animation:nevar linear infinite;
+  opacity:0.7;
+}
+
+.copo-noche{
+  background:#e0e0ff;
+}
+
+@keyframes nevar{
+  0%{transform:translateY(-10px) rotate(0deg);}
+  100%{transform:translateY(150px) rotate(360deg);}
 }
 
 .estrellas{
   position:absolute;
   width:100%;
   height:100%;
-  z-index:2;
+  z-index:3;
   opacity:0.4;
-  border-radius:24px;
-  overflow:hidden;
 }
 
 .estrellas span{
@@ -70,7 +164,6 @@ body{
   background:linear-gradient(180deg, #3a2c24, #1e1612);
   border-top:1px solid rgba(200,170,140,0.3);
   z-index:5;
-  border-radius:0 0 24px 24px; /* Añadido border-radius inferior */
 }
 
 .info-bar{
@@ -87,7 +180,6 @@ body{
   font-weight:300;
   letter-spacing:0.5px;
   text-shadow:0 1px 3px rgba(0,0,0,0.5);
-  /* Eliminado pointer-events:none para que no interfiera con ElementStream */
 }
 
 .clima{
@@ -112,8 +204,8 @@ body{
   font-size:15px;
   font-weight:400;
   color:#e6eefa;
-  font-family: 'Inter', monospace;
-  letter-spacing: 1px;
+  font-family:'Inter',monospace;
+  letter-spacing:1px;
 }
 
 .horas{
@@ -128,7 +220,6 @@ body{
   font-weight:400;
   color:rgba(255,255,255,0.5);
   z-index:10;
-  letter-spacing:0.5px;
 }
 
 .astro{
@@ -138,7 +229,7 @@ body{
   width:70px;
   height:70px;
   z-index:20;
-  transition:left 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+  transition:left 0.5s cubic-bezier(0.2,0.9,0.3,1);
   animation:flotar 5s ease-in-out infinite;
   filter:drop-shadow(0 8px 16px rgba(0,0,0,0.6));
 }
@@ -149,47 +240,25 @@ body{
   100%{transform:translate(-50%,-50%) scale(1);}
 }
 
-.astro svg{
-  width:100%;
-  height:100%;
-  display:block;
-}
+.astro svg{width:100%;height:100%;display:block;}
 
-/* CORREGIDO: Versión para ElementStream/OBS */
 .tag{
   position:absolute;
   font-size:10px;
-  font-weight:500; /* Aumentado peso de fuente */
+  font-weight:500;
   color:#ffffff;
-  background:rgba(0,0,0,0.65); /* Fondo más sólido en lugar de backdrop-filter */
+  background:rgba(0,0,0,0.65);
   padding:5px 12px;
   border-radius:40px;
   white-space:nowrap;
   z-index:25;
-  border:1px solid rgba(255,215,0,0.3); /* Borde dorado más visible */
+  border:1px solid rgba(255,215,0,0.3);
   letter-spacing:0.5px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.5); /* Sombra para destacar */
-  /* Eliminado backdrop-filter y pointer-events */
+  box-shadow:0 2px 8px rgba(0,0,0,0.5);
 }
 
-/* Versión hover opcional para debug (puedes quitarlo) */
-.tag:hover{
-  background:rgba(20,20,30,0.9);
-  border-color:rgba(255,215,0,0.6);
-}
-
-.sol-tag{
-  left:calc(100% + 10px);
-  top:50%;
-  transform:translateY(-50%);
-}
-
-.luna-tag{
-  right:calc(100% + 10px);
-  top:50%;
-  transform:translateY(-50%);
-}
-
+.sol-tag{left:calc(100% + 10px);top:50%;transform:translateY(-50%);}
+.luna-tag{right:calc(100% + 10px);top:50%;transform:translateY(-50%);}
 .divider{
   position:absolute;
   left:50%;
@@ -199,7 +268,6 @@ body{
   background:rgba(255,255,200,0.08);
   z-index:2;
 }
-
 .linea{
   position:absolute;
   bottom:40px;
@@ -209,26 +277,19 @@ body{
   background:rgba(255,220,150,0.15);
   z-index:4;
 }
-
-/* Ajuste para que el contenedor no corte las burbujas */
-.solar-bar {
-  overflow: visible !important;
-}
-
-/* Asegurar que el fondo no corte las burbujas */
-.fondo, .estrellas, .horizonte {
-  overflow: hidden; /* Solo estos elementos internos mantienen overflow hidden */
-}
 </style>
 </head>
 
 <body>
 
 <div class="solar-bar">
+  <!-- FONDO BASE -->
+  <div class="fondo" id="fondoClima"></div>
+  
+  <!-- CAPA DE EFECTOS CLIMÁTICOS -->
+  <div class="clima-capa" id="climaCapa"></div>
 
-  <div class="fondo"></div>
-
-  <div class="estrellas">
+  <div class="estrellas" id="estrellas">
     <span style="top:15%;left:55%"></span>
     <span style="top:25%;left:62%"></span>
     <span style="top:35%;left:70%"></span>
@@ -311,10 +372,12 @@ body{
     </svg>
     <div id="lunaTag" class="tag luna-tag">🌑 00:00</div>
   </div>
-
 </div>
 
 <script>
+const fondoClima = document.getElementById('fondoClima');
+const climaCapa = document.getElementById('climaCapa');
+const estrellas = document.getElementById('estrellas');
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -328,8 +391,16 @@ const API_KEY = '788dd3b3a00a8c60f64f75bd2f0c33f0';
 const LAT = '4.0929';
 const LON = '-76.2165';
 
+let climaAnterior = '';
+let esDeNoche = false;
+
 function getHoraColombia(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
+}
+
+function esNoche(now){
+  let hora = now.getHours();
+  return hora < 6 || hora >= 18; // Noche de 18:00 a 6:00
 }
 
 function formatHora(h){
@@ -339,10 +410,7 @@ function formatHora(h){
 }
 
 function formatHoraConSegundos(now){
-  const horas = String(now.getHours()).padStart(2, '0');
-  const minutos = String(now.getMinutes()).padStart(2, '0');
-  const segundos = String(now.getSeconds()).padStart(2, '0');
-  return `${horas}:${minutos}:${segundos}`;
+  return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 }
 
 function calcularFaseLunar(){
@@ -354,14 +422,12 @@ function calcularFaseLunar(){
 
 function actualizarMascaraLunar(fase){
   if(!sombraMovil) return;
-  
   let cx;
   if(fase < 0.5){
     cx = 24 + (fase * 96);
   } else {
     cx = 72 - ((fase - 0.5) * 96);
   }
-  
   cx = Math.max(0, Math.min(48, cx));
   sombraMovil.setAttribute('cx', cx);
 }
@@ -377,12 +443,123 @@ function getInfoFase(f){
   return ['🌘','Menguante'];
 }
 
+// ===== FUNCIÓN PRINCIPAL DE CLIMA CON DÍA/NOCHE =====
+function actualizarEfectosClima(desc, noche){
+  const d = desc.toLowerCase();
+  
+  // LIMPIAR CAPA DE CLIMA
+  climaCapa.innerHTML = '';
+  
+  // 1. DEFINIR COLORES SEGÚN DÍA/NOCHE Y CLIMA
+  let coloresFondo;
+  
+  if(noche){
+    // VERSIÓN NOCTURNA
+    if(d.includes('rain') || d.includes('lluvia')){
+      coloresFondo = 'linear-gradient(135deg, #0c1a2b, #142b44, #1a1f2e)';
+    }
+    else if(d.includes('storm') || d.includes('tormenta')){
+      coloresFondo = 'linear-gradient(135deg, #0a0a14, #131320, #1a1a2e)';
+    }
+    else if(d.includes('cloud') || d.includes('nube')){
+      coloresFondo = 'linear-gradient(135deg, #1a2635, #232f3f, #1e3a5f)';
+    }
+    else if(d.includes('snow') || d.includes('nieve')){
+      coloresFondo = 'linear-gradient(135deg, #2a3848, #35475a, #2d4055)';
+    }
+    else { // Despejado noche
+      coloresFondo = 'linear-gradient(135deg, #0b1a2e, #142b44, #1e3a5f)';
+    }
+  } else {
+    // VERSIÓN DIURNA
+    if(d.includes('rain') || d.includes('lluvia')){
+      coloresFondo = 'linear-gradient(135deg, #4a6b8f, #3a5f7a, #2b4b66)';
+    }
+    else if(d.includes('storm') || d.includes('tormenta')){
+      coloresFondo = 'linear-gradient(135deg, #3a4958, #2d3e4f, #1f3542)';
+    }
+    else if(d.includes('cloud') || d.includes('nube')){
+      coloresFondo = 'linear-gradient(135deg, #7f8c8d, #6c7a89, #5a6b7a)';
+    }
+    else if(d.includes('snow') || d.includes('nieve')){
+      coloresFondo = 'linear-gradient(135deg, #a5b8c9, #8fa3b7, #7a8fa5)';
+    }
+    else { // Despejado día
+      coloresFondo = 'linear-gradient(135deg, #3a7bd5, #1e3a5f, #0b1a2e)';
+    }
+  }
+  
+  fondoClima.style.background = coloresFondo;
+  
+  // 2. AÑADIR EFECTOS VISUALES
+  if(d.includes('rain') || d.includes('lluvia')){
+    for(let i = 0; i < 30; i++){
+      const gota = document.createElement('div');
+      gota.className = `gota ${noche ? 'gota-noche' : ''}`;
+      gota.style.left = Math.random() * 100 + '%';
+      gota.style.animationDuration = 0.5 + Math.random() * 0.5 + 's';
+      gota.style.animationDelay = Math.random() * 2 + 's';
+      gota.style.height = 10 + Math.random() * 15 + 'px';
+      climaCapa.appendChild(gota);
+    }
+  }
+  
+  if(d.includes('storm') || d.includes('tormenta')){
+    const rayo = document.createElement('div');
+    rayo.className = `rayo ${noche ? 'rayo-noche' : ''}`;
+    climaCapa.appendChild(rayo);
+    
+    for(let i = 0; i < 50; i++){
+      const gota = document.createElement('div');
+      gota.className = `gota ${noche ? 'gota-noche' : ''}`;
+      gota.style.left = Math.random() * 100 + '%';
+      gota.style.animationDuration = 0.3 + Math.random() * 0.3 + 's';
+      gota.style.animationDelay = Math.random() * 1 + 's';
+      climaCapa.appendChild(gota);
+    }
+  }
+  
+  if(d.includes('cloud') || d.includes('nube')){
+    for(let i = 0; i < 3; i++){
+      const nube = document.createElement('div');
+      nube.className = `nube ${noche ? 'nube-noche' : 'nube-dia'}`;
+      nube.style.width = 60 + Math.random() * 60 + 'px';
+      nube.style.height = 20 + Math.random() * 20 + 'px';
+      nube.style.top = 20 + Math.random() * 60 + '%';
+      nube.style.animationDuration = 15 + Math.random() * 10 + 's';
+      nube.style.animationDelay = -i * 5 + 's';
+      nube.style.opacity = (noche ? 0.2 : 0.3) + Math.random() * 0.2;
+      climaCapa.appendChild(nube);
+    }
+  }
+  
+  if(d.includes('snow') || d.includes('nieve')){
+    for(let i = 0; i < 40; i++){
+      const copo = document.createElement('div');
+      copo.className = `copo ${noche ? 'copo-noche' : ''}`;
+      copo.style.left = Math.random() * 100 + '%';
+      copo.style.animationDuration = 3 + Math.random() * 4 + 's';
+      copo.style.animationDelay = Math.random() * 3 + 's';
+      copo.style.width = copo.style.height = (2 + Math.random() * 4) + 'px';
+      climaCapa.appendChild(copo);
+    }
+  }
+  
+  // 3. CONTROL DE ESTRELLAS (solo de noche y despejado)
+  if(noche && !d.includes('cloud') && !d.includes('nube') && !d.includes('rain') && !d.includes('storm')){
+    estrellas.style.opacity = '0.4';
+  } else {
+    estrellas.style.opacity = '0.1'; // Casi invisibles si hay nubes o es de día
+  }
+}
+
 function getClimaEmoji(desc){
   const d = desc.toLowerCase();
   if(d.includes('clear')||d.includes('despejado')) return '☀️';
   if(d.includes('cloud')||d.includes('nube')) return '☁️';
   if(d.includes('rain')||d.includes('lluvia')) return '🌧️';
   if(d.includes('storm')||d.includes('tormenta')) return '⛈️';
+  if(d.includes('snow')||d.includes('nieve')) return '❄️';
   if(d.includes('partly')||d.includes('parcial')) return '⛅';
   return '🌤️';
 }
@@ -394,8 +571,18 @@ function fetchClima(){
       const temp = Math.round(data.main.temp);
       const desc = data.weather[0].description;
       const emoji = getClimaEmoji(desc);
+      
       temperaturaEl.innerHTML = `${temp}°`;
       climaDescEl.innerHTML = `${emoji} ${desc.toUpperCase()}`;
+      
+      const now = getHoraColombia();
+      const noche = esNoche(now);
+      const claveClima = desc.toLowerCase() + (noche ? '-noche' : '-dia');
+      
+      if(claveClima !== climaAnterior){
+        climaAnterior = claveClima;
+        actualizarEfectosClima(desc, noche);
+      }
     })
     .catch(() => {
       temperaturaEl.innerHTML = '24°';
@@ -406,6 +593,7 @@ function fetchClima(){
 function actualizar(){
   let now = getHoraColombia();
   let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+  let noche = esNoche(now);
 
   let solPos = h / 24;
   let lunaPos = (h + 12) / 24;
@@ -421,12 +609,19 @@ function actualizar(){
   lunaTag.innerHTML = `${emoji} ${formatHora((h+12)%24)}`;
 
   actualizarMascaraLunar(fase);
-
   horaInfoEl.innerHTML = formatHoraConSegundos(now);
+  
+  // Verificar si cambió día/noche para actualizar clima
+  if(noche !== esDeNoche){
+    esDeNoche = noche;
+    fetchClima(); // Recargar clima para ajustar efectos
+  }
 }
 
+// INICIAR
+esDeNoche = esNoche(getHoraColombia());
 fetchClima();
-setInterval(fetchClima, 600000);
+setInterval(fetchClima, 300000); // Cada 5 minutos
 setInterval(actualizar, 100);
 actualizar();
 </script>
