@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Tiempo Real · Tuluá · CON CLIMA REAL</title>
+<title>Solar Bar · Tiempo Real · Tuluá · CON FASES REALES</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -269,7 +269,6 @@ body{
   z-index:9;
 }
 
-/* ===== EFECTOS DE CLIMA ===== */
 .gota{
   position:absolute;
   width:2px;
@@ -339,7 +338,6 @@ body{
   <div class="mascara-dia" id="mascaraDia"></div>
   <div class="mascara-noche" id="mascaraNoche"></div>
 
-  <!-- CAPA DE CLIMA -->
   <div id="climaCapa" style="position:absolute; width:100%; height:100%; z-index:6; pointer-events:none; overflow:hidden; border-radius:24px;"></div>
 
   <div class="estrellas" id="estrellas">
@@ -390,7 +388,7 @@ body{
     <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
   </div>
 
-  <!-- LUNA CON FASES REALES -->
+  <!-- LUNA CON FASES REALES (ADAPTADA DEL CÓDIGO QUE FUNCIONA) -->
   <div id="luna" class="astro">
     <svg viewBox="0 0 48 48">
       <defs>
@@ -408,23 +406,41 @@ body{
           <stop offset="0%" stop-color="#D4C87C" stop-opacity="0.6" />
           <stop offset="100%" stop-color="#B8A878" stop-opacity="0.3" />
         </radialGradient>
+        <radialGradient id="crater-sombra-grad" cx="30%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#888888" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#666666" stop-opacity="0.4" />
+        </radialGradient>
         
-        <mask id="mascara-fase">
-          <rect x="0" y="0" width="48" height="48" fill="white" />
-          <circle id="sombra-movil" cx="24" cy="24" r="24" fill="black" />
+        <mask id="mascara-fase-lunar">
+          <rect x="-50" y="-50" width="100" height="100" fill="white" />
+          <circle id="sombra-movil" cx="0" cy="0" r="24" fill="black" />
         </mask>
+        
+        <!-- Luna iluminada con cráteres -->
+        <g id="luna-iluminada">
+          <circle cx="0" cy="0" r="22" fill="url(#luna-grad)"/>
+          <circle cx="-8" cy="-7" r="6" fill="url(#crater-grad)"/>
+          <circle cx="9" cy="6" r="5.5" fill="url(#crater-grad)"/>
+          <circle cx="5" cy="-9" r="5" fill="url(#crater-grad)"/>
+        </g>
+        
+        <!-- Luna sombra con cráteres -->
+        <g id="luna-sombra">
+          <circle cx="0" cy="0" r="22" fill="url(#luna-sombra-grad)"/>
+          <circle cx="-8" cy="-7" r="6" fill="url(#crater-sombra-grad)"/>
+          <circle cx="9" cy="6" r="5.5" fill="url(#crater-sombra-grad)"/>
+          <circle cx="5" cy="-9" r="5" fill="url(#crater-sombra-grad)"/>
+        </g>
       </defs>
       
-      <circle cx="24" cy="24" r="22" fill="url(#luna-grad)"/>
-      <circle cx="16" cy="17" r="6" fill="url(#crater-grad)"/>
-      <circle cx="30" cy="26" r="5.5" fill="url(#crater-grad)"/>
-      <circle cx="22" cy="13" r="5" fill="url(#crater-grad)"/>
-      
-      <circle cx="24" cy="24" r="22" fill="url(#luna-sombra-grad)" mask="url(#mascara-fase)"/>
-      
-      <circle cx="16" cy="17" r="6" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
-      <circle cx="30" cy="26" r="5.5" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
-      <circle cx="22" cy="13" r="5" fill="#666666" opacity="0.3" mask="url(#mascara-fase)"/>
+      <!-- Construcción de la luna con fases -->
+      <g transform="translate(24, 24)">
+        <use href="#luna-iluminada"/>
+        <g mask="url(#mascara-fase-lunar)">
+          <use href="#luna-sombra"/>
+        </g>
+        <circle cx="0" cy="0" r="26" fill="none" stroke="#FFF2A6" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.4"/>
+      </g>
     </svg>
     <div id="lunaTag" class="tag luna-tag">🌑 00:00</div>
   </div>
@@ -469,41 +485,43 @@ function formatHoraConSegundos(now){
   return `${horas}:${minutos}:${segundos}`;
 }
 
-// ===== CÁLCULO DE FASE LUNAR REAL =====
-function calcularFaseLunar(){
+// ===== CÁLCULO DE FASE LUNAR REAL (tomado del código que funciona) =====
+function calcularFaseLunar() {
   const ahora = new Date();
   // Luna nueva conocida: 6 de marzo 2024
   const lunaNueva = new Date(Date.UTC(2024, 2, 6, 12, 0, 0));
-  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000; // días en ms
-  return ((ahora - lunaNueva) / ciclo) % 1;
+  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000;
+  const diff = ahora - lunaNueva;
+  return ((diff / ciclo) % 1 + 1) % 1;
 }
 
-// ===== ACTUALIZAR MÁSCARA PARA MOSTRAR LA FASE CORRECTA =====
-function actualizarMascaraLunar(fase){
-  if(!sombraMovil) return;
-  
-  let cx;
-  if (fase < 0.5) {
-    // Creciente: la parte iluminada crece de derecha a izquierda
-    cx = 48 - (fase * 96);
+// ===== ACTUALIZAR MÁSCARA LUNAR (tomado del código que funciona) =====
+function actualizarMascaraLunar(fase) {
+  if (!sombraMovil) return;
+  let d;
+  // Rango de -24 a 24 para el desplazamiento de la sombra
+  if (fase <= 0.25) {
+    d = -24 + fase * 96;  // -24 a 0
+  } else if (fase <= 0.5) {
+    d = 0 + (fase - 0.25) * 96;  // 0 a 24
+  } else if (fase <= 0.75) {
+    d = 24 - (fase - 0.5) * 96;  // 24 a 0
   } else {
-    // Menguante: la parte iluminada decrece de derecha a izquierda
-    cx = (fase - 0.5) * 96;
+    d = 0 - (fase - 0.75) * 96;  // 0 a -24
   }
-  
-  cx = Math.max(0, Math.min(48, cx));
-  sombraMovil.setAttribute('cx', cx);
+  d = Math.max(-24, Math.min(24, d));
+  sombraMovil.setAttribute('cx', d);
 }
 
-function getInfoFase(f){
-  if(f < 0.03 || f > 0.97) return ['🌑','Nueva'];
-  if(f < 0.23) return ['🌒','Creciente'];
-  if(f < 0.27) return ['🌓','Cuarto Creciente'];
-  if(f < 0.47) return ['🌔','Gibosa Creciente'];
-  if(f < 0.53) return ['🌕','Llena'];
-  if(f < 0.73) return ['🌖','Gibosa Menguante'];
-  if(f < 0.77) return ['🌗','Cuarto Menguante'];
-  return ['🌘','Menguante'];
+function getFaseLunarInfo(f) {
+  if (f < 0.03 || f > 0.97) return { emoji: '🌑', nombre: 'Nueva' };
+  if (f < 0.23) return { emoji: '🌒', nombre: 'Creciente' };
+  if (f < 0.27) return { emoji: '🌓', nombre: 'Cuarto Creciente' };
+  if (f < 0.47) return { emoji: '🌔', nombre: 'Gibosa Creciente' };
+  if (f < 0.53) return { emoji: '🌕', nombre: 'Llena' };
+  if (f < 0.73) return { emoji: '🌖', nombre: 'Gibosa Menguante' };
+  if (f < 0.77) return { emoji: '🌗', nombre: 'Cuarto Menguante' };
+  return { emoji: '🌘', nombre: 'Menguante' };
 }
 
 function getClimaEmoji(desc){
@@ -516,7 +534,6 @@ function getClimaEmoji(desc){
   return '🌤️';
 }
 
-// ===== FUNCIONES PARA CLIMA DE FONDO =====
 function crearElementosClima(tipo, cantidad, esNoche){
   const fragment = document.createDocumentFragment();
   for(let i = 0; i < cantidad; i++){
@@ -568,7 +585,6 @@ function actualizarClimaFondo(desc, esNoche){
   if(d.includes('nube') && !d.includes('parcial')){
     climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
   }
-  // Sin nieve como pidió
 }
 
 function fetchClima(){
@@ -610,15 +626,18 @@ function actualizar(){
   sol.style.left = (solPos * 100) + "%";
   luna.style.left = (lunaPos * 100) + "%";
 
-  // Etiquetas
+  // Etiqueta del sol
   solTag.innerHTML = `☀️ ${formatHora(h)}`;
   
   // ===== CALCULAR FASE LUNAR REAL Y ACTUALIZAR =====
   const fase = calcularFaseLunar();
-  const [emoji, nombre] = getInfoFase(fase);
+  const faseInfo = getFaseLunarInfo(fase);
   actualizarMascaraLunar(fase);
-  lunaTag.innerHTML = `${emoji} ${formatHora((h+12)%24)}`;
+  
+  // Actualizar etiqueta de la luna con la fase real
+  lunaTag.innerHTML = `${faseInfo.emoji} ${formatHora((h+12)%24)}`;
 
+  // Actualizar hora
   horaInfoEl.innerHTML = formatHoraConSegundos(now);
   
   // Máscaras que siguen a los astros
