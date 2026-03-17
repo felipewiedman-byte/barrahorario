@@ -2,11 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Día con Sol, Noche con Luna · Tuluá</title>
+<title>Solar Bar · Tiempo Real · Tuluá · CON CLIMA REAL</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-/* Tus estilos exactamente igual */
 *{margin:0;padding:0;box-sizing:border-box;}
+
 body{
   height:100vh;
   display:flex;
@@ -15,6 +16,7 @@ body{
   background:transparent;
   font-family:'Inter',sans-serif;
 }
+
 .solar-bar{
   width:580px;
   height:130px;
@@ -22,6 +24,7 @@ body{
   overflow:hidden !important;
   position:relative;
 }
+
 .fondo-dinamico{
   position:absolute;
   width:100%;
@@ -30,6 +33,7 @@ body{
   overflow:hidden;
   z-index:1;
 }
+
 .capa-dia{
   position:absolute;
   width:100%;
@@ -39,6 +43,7 @@ body{
   transition:opacity 0.5s ease;
   z-index:1;
 }
+
 .capa-noche{
   position:absolute;
   width:100%;
@@ -48,6 +53,7 @@ body{
   transition:opacity 0.5s ease;
   z-index:2;
 }
+
 .mascara-dia{
   position:absolute;
   width:100%;
@@ -58,6 +64,7 @@ body{
   overflow:hidden;
   border-radius:24px;
 }
+
 .mascara-dia::before{
   content:"";
   position:absolute;
@@ -74,6 +81,7 @@ body{
   z-index:3;
   left:-50%;
 }
+
 .mascara-noche{
   position:absolute;
   width:100%;
@@ -84,6 +92,7 @@ body{
   overflow:hidden;
   border-radius:24px;
 }
+
 .mascara-noche::before{
   content:"";
   position:absolute;
@@ -100,6 +109,7 @@ body{
   z-index:4;
   left:-50%;
 }
+
 .estrellas{
   position:absolute;
   width:100%;
@@ -111,6 +121,7 @@ body{
   overflow:hidden;
   pointer-events:none;
 }
+
 .estrellas span{
   position:absolute;
   width:2px;
@@ -118,6 +129,7 @@ body{
   background:#fff;
   border-radius:50%;
 }
+
 .horizonte{
   position:absolute;
   bottom:0;
@@ -128,6 +140,7 @@ body{
   z-index:10;
   border-radius:0 0 24px 24px;
 }
+
 .info-bar{
   position:absolute;
   bottom:10px;
@@ -143,21 +156,25 @@ body{
   letter-spacing:0.5px;
   text-shadow:0 1px 3px rgba(0,0,0,0.5);
 }
+
 .clima{
   display:flex;
   align-items:center;
   gap:12px;
   font-size:13px;
 }
+
 .temperatura{
   font-weight:500;
   color:#ffecb3;
   font-size:16px;
 }
+
 .descripcion{
   text-transform:uppercase;
   opacity:0.8;
 }
+
 .hora{
   font-size:15px;
   font-weight:400;
@@ -165,6 +182,7 @@ body{
   font-family:'Inter',monospace;
   letter-spacing:1px;
 }
+
 .horas{
   position:absolute;
   top:10px;
@@ -179,6 +197,7 @@ body{
   z-index:15;
   letter-spacing:0.5px;
 }
+
 .astro{
   position:absolute;
   top:45% !important;
@@ -190,16 +209,19 @@ body{
   animation:flotar 5s ease-in-out infinite;
   filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));
 }
+
 @keyframes flotar{
   0%{transform:translate(-50%,-50%) scale(1);}
   50%{transform:translate(-50%,-56%) scale(1.02);}
   100%{transform:translate(-50%,-50%) scale(1);}
 }
+
 .astro svg{
   width:100%;
   height:100%;
   display:block;
 }
+
 .tag{
   position:absolute;
   font-size:10px;
@@ -214,16 +236,19 @@ body{
   letter-spacing:0.5px;
   box-shadow:0 2px 8px rgba(0,0,0,0.5);
 }
+
 .sol-tag{
   left:calc(100% + 10px);
   top:50%;
   transform:translateY(-50%);
 }
+
 .luna-tag{
   right:calc(100% + 10px);
   top:50%;
   transform:translateY(-50%);
 }
+
 .divider{
   position:absolute;
   left:50%;
@@ -233,6 +258,7 @@ body{
   background:rgba(255,255,200,0.08);
   z-index:8;
 }
+
 .linea{
   position:absolute;
   bottom:40px;
@@ -241,6 +267,64 @@ body{
   height:1px;
   background:rgba(255,220,150,0.15);
   z-index:9;
+}
+
+/* ===== EFECTOS DE CLIMA ===== */
+.gota{
+  position:absolute;
+  width:2px;
+  background:rgba(255,255,255,0.7);
+  border-radius:0 0 5px 5px;
+  animation:llover linear infinite;
+  z-index:6;
+}
+
+@keyframes llover{
+  0%{transform:translateY(-20px); opacity:0;}
+  20%{opacity:1;}
+  100%{transform:translateY(150px); opacity:0;}
+}
+
+.gota-noche{
+  background:rgba(180,200,255,0.6);
+}
+
+.nube{
+  position:absolute;
+  background:rgba(255,255,255,0.3);
+  border-radius:50px;
+  filter:blur(10px);
+  animation:flotarNube linear infinite;
+  z-index:6;
+}
+
+.nube-dia{
+  background:rgba(255,255,255,0.4);
+}
+
+.nube-noche{
+  background:rgba(100,120,150,0.3);
+}
+
+@keyframes flotarNube{
+  0%{left:-100px;}
+  100%{left:700px;}
+}
+
+.rayo{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:rgba(255,255,255,0.4);
+  opacity:0;
+  animation:relampago 5s infinite;
+  z-index:6;
+}
+
+@keyframes relampago{
+  0%,95%,98%{opacity:0;}
+  96%{opacity:0.5;}
+  97%{opacity:0;}
 }
 </style>
 </head>
@@ -254,6 +338,9 @@ body{
   
   <div class="mascara-dia" id="mascaraDia"></div>
   <div class="mascara-noche" id="mascaraNoche"></div>
+
+  <!-- CAPA DE CLIMA -->
+  <div id="climaCapa" style="position:absolute; width:100%; height:100%; z-index:6; pointer-events:none; overflow:hidden; border-radius:24px;"></div>
 
   <div class="estrellas" id="estrellas">
     <span style="top:15%;left:55%"></span>
@@ -303,7 +390,7 @@ body{
     <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
   </div>
 
-  <!-- LUNA -->
+  <!-- LUNA CON FASES REALES -->
   <div id="luna" class="astro">
     <svg viewBox="0 0 48 48">
       <defs>
@@ -357,10 +444,13 @@ const mascaraDia = document.getElementById("mascaraDia");
 const mascaraNoche = document.getElementById("mascaraNoche");
 const capaDia = document.getElementById("capaDia");
 const capaNoche = document.getElementById("capaNoche");
+const climaCapa = document.getElementById("climaCapa");
 
 const API_KEY = '788dd3b3a00a8c60f64f75bd2f0c33f0';
 const LAT = '4.0929';
 const LON = '-76.2165';
+
+let climaActual = '';
 
 function getHoraColombia(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
@@ -379,21 +469,28 @@ function formatHoraConSegundos(now){
   return `${horas}:${minutos}:${segundos}`;
 }
 
+// ===== CÁLCULO DE FASE LUNAR REAL =====
 function calcularFaseLunar(){
   const ahora = new Date();
+  // Luna nueva conocida: 6 de marzo 2024
   const lunaNueva = new Date(Date.UTC(2024, 2, 6, 12, 0, 0));
-  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000;
+  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000; // días en ms
   return ((ahora - lunaNueva) / ciclo) % 1;
 }
 
+// ===== ACTUALIZAR MÁSCARA PARA MOSTRAR LA FASE CORRECTA =====
 function actualizarMascaraLunar(fase){
   if(!sombraMovil) return;
+  
   let cx;
-  if(fase < 0.5){
+  if (fase < 0.5) {
+    // Creciente: la parte iluminada crece de derecha a izquierda
     cx = 48 - (fase * 96);
   } else {
+    // Menguante: la parte iluminada decrece de derecha a izquierda
     cx = (fase - 0.5) * 96;
   }
+  
   cx = Math.max(0, Math.min(48, cx));
   sombraMovil.setAttribute('cx', cx);
 }
@@ -409,14 +506,87 @@ function getInfoFase(f){
   return ['🌘','Menguante'];
 }
 
+function getClimaEmoji(desc){
+  const d = desc.toLowerCase();
+  if(d.includes('clear')||d.includes('despejado')) return '☀️';
+  if(d.includes('cloud')||d.includes('nube')) return '☁️';
+  if(d.includes('rain')||d.includes('lluvia')) return '🌧️';
+  if(d.includes('storm')||d.includes('tormenta')) return '⛈️';
+  if(d.includes('partly')||d.includes('parcial')) return '⛅';
+  return '🌤️';
+}
+
+// ===== FUNCIONES PARA CLIMA DE FONDO =====
+function crearElementosClima(tipo, cantidad, esNoche){
+  const fragment = document.createDocumentFragment();
+  for(let i = 0; i < cantidad; i++){
+    let el;
+    if(tipo === 'lluvia'){
+      el = document.createElement('div');
+      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = 0.5 + Math.random() * 0.5 + 's';
+      el.style.animationDelay = Math.random() * 2 + 's';
+      el.style.height = 8 + Math.random() * 12 + 'px';
+    }
+    if(tipo === 'tormenta'){
+      el = document.createElement('div');
+      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = 0.3 + Math.random() * 0.3 + 's';
+      el.style.height = 10 + Math.random() * 10 + 'px';
+    }
+    if(tipo === 'nube'){
+      el = document.createElement('div');
+      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
+      el.style.width = 50 + Math.random() * 50 + 'px';
+      el.style.height = 15 + Math.random() * 20 + 'px';
+      el.style.top = 10 + Math.random() * 50 + '%';
+      el.style.animationDuration = 12 + Math.random() * 10 + 's';
+      el.style.animationDelay = -i * 4 + 's';
+    }
+    if(el) fragment.appendChild(el);
+  }
+  return fragment;
+}
+
+function actualizarClimaFondo(desc, esNoche){
+  if(!climaCapa) return;
+  
+  while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
+  
+  const d = desc.toLowerCase();
+  if(d.includes('lluvia')){
+    climaCapa.appendChild(crearElementosClima('lluvia', 30, esNoche));
+  }
+  if(d.includes('tormenta')){
+    const rayo = document.createElement('div');
+    rayo.className = 'rayo';
+    climaCapa.appendChild(rayo);
+    climaCapa.appendChild(crearElementosClima('tormenta', 40, esNoche));
+  }
+  if(d.includes('nube') && !d.includes('parcial')){
+    climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
+  }
+  // Sin nieve como pidió
+}
+
 function fetchClima(){
   fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`)
     .then(r => r.json())
     .then(data => {
       const temp = Math.round(data.main.temp);
       const desc = data.weather[0].description;
+      const emoji = getClimaEmoji(desc);
       temperaturaEl.innerHTML = `${temp}°`;
-      climaDescEl.innerHTML = `☀️ ${desc.toUpperCase()}`;
+      climaDescEl.innerHTML = `${emoji} ${desc.toUpperCase()}`;
+      
+      if(desc !== climaActual){
+        climaActual = desc;
+        const now = getHoraColombia();
+        const esNoche = now.getHours() < 6 || now.getHours() >= 18;
+        actualizarClimaFondo(desc, esNoche);
+      }
     })
     .catch(() => {
       temperaturaEl.innerHTML = '24°';
@@ -442,39 +612,41 @@ function actualizar(){
 
   // Etiquetas
   solTag.innerHTML = `☀️ ${formatHora(h)}`;
+  
+  // ===== CALCULAR FASE LUNAR REAL Y ACTUALIZAR =====
   const fase = calcularFaseLunar();
   const [emoji, nombre] = getInfoFase(fase);
+  actualizarMascaraLunar(fase);
   lunaTag.innerHTML = `${emoji} ${formatHora((h+12)%24)}`;
 
-  // ACTUALIZAR MÁSCARA LUNAR (fases)
-  actualizarMascaraLunar(fase);
-  
-  // ACTUALIZAR HORA
   horaInfoEl.innerHTML = formatHoraConSegundos(now);
   
-  // ===== LÓGICA SIMPLE: LA MÁSCARA SIGUE AL ASTRO =====
-  // La máscara del día se centra en el sol
-  let desplazamientoDia = (solPos * 100) - 50; // -50% a +50%
+  // Máscaras que siguen a los astros
+  let desplazamientoDia = (solPos * 100) - 50;
   mascaraDia.style.transform = `translateX(${desplazamientoDia}%)`;
   
-  // La máscara de la noche se centra en la luna
   let desplazamientoNoche = (lunaPos * 100) - 50;
   mascaraNoche.style.transform = `translateX(${desplazamientoNoche}%)`;
   
   // Control de estrellas y capas base
   if (h >= 6 && h < 18) {
-    // DÍA
     estrellas.style.opacity = '0';
     capaNoche.style.opacity = '0';
     capaDia.style.opacity = '1';
   } else {
-    // NOCHE
     estrellas.style.opacity = '0.7';
     capaNoche.style.opacity = '1';
     capaDia.style.opacity = '0';
   }
+  
+  // Actualizar clima de fondo si cambia día/noche
+  if(esNoche !== window.esNocheAnterior){
+    window.esNocheAnterior = esNoche;
+    if(climaActual) actualizarClimaFondo(climaActual, esNoche);
+  }
 }
 
+window.esNocheAnterior = getHoraColombia().getHours() < 6 || getHoraColombia().getHours() >= 18;
 fetchClima();
 setInterval(fetchClima, 600000);
 setInterval(actualizar, 100);
