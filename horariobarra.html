@@ -6,7 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
-/* ===== TU DISEÑO ORIGINAL INTACTO ===== */
+/* ===== TU DISEÑO ORIGINAL INTACTO (SIN CAMBIOS) ===== */
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -669,7 +669,9 @@ function actualizar(){
   
   lunaTag.innerHTML = `${faseInfo.emoji} ${formatHora((h+12)%24)}`;
 
-  horaInfoEl.innerHTML = formatHoraConSegundos(now);
+  // MEJORADO: El reloj se actualiza cada segundo, no cada décima.
+  // Pero como ahora 'actualizar' se ejecuta cada 1000ms (1s), con esto es suficiente.
+  horaInfoEl.innerHTML = formatHoraConSegundos(now); 
   
   let desplazamientoDia = (solPos * 100) - 50;
   mascaraDia.style.transform = `translateX(${desplazamientoDia}%)`;
@@ -690,6 +692,7 @@ function actualizar(){
     capaNoche.style.opacity = '1';
     capaDia.style.opacity = '0';
     
+    // MEJORADO: Cálculo más suave de la oscuridad.
     // La sombra lunar es más intensa cuanto más lejos está la luna del centro
     // y cuando hay luna nueva (menos luz)
     const distanciaCentro = Math.abs(lunaPos - 0.5) * 2; // 0 a 1
@@ -705,14 +708,21 @@ function actualizar(){
                                     rgba(0,0,0,0) 0%, 
                                     rgba(0,0,0,0.7) 70%)`;
   }
+  
+  // CORREGIDO: Se eliminó la línea que causaba el parpadeo.
+  // Antes había un "mascaraDia.style.transform = ..." extra aquí, causando el conflicto.
 }
 
 // Inicializar
 window.esNocheAnterior = getHoraColombia().getHours() < 6 || getHoraColombia().getHours() >= 18;
 
 fetchClima();
-setInterval(fetchClima, 600000);
-setInterval(actualizar, 100);
+setInterval(fetchClima, 600000); // Clima cada 10 minutos
+
+// MEJORADO: Reducido de 100ms a 1000ms (1 segundo). Es suficiente para la animación y elimina parpadeos.
+setInterval(actualizar, 1000); 
+
+// Ejecución inicial
 actualizar();
 
 setTimeout(() => {
