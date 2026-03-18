@@ -392,7 +392,7 @@ body{
     <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
   </div>
 
-  <!-- LUNA CON FASES REALES (ADAPTADA SIN CAMBIAR ESTRUCTURA) -->
+  <!-- LUNA CON FASES REALES -->
   <div id="luna" class="astro">
     <svg viewBox="0 0 48 48">
       <defs>
@@ -410,12 +410,8 @@ body{
           <stop offset="0%" stop-color="#D4C87C" stop-opacity="0.6" />
           <stop offset="100%" stop-color="#B8A878" stop-opacity="0.3" />
         </radialGradient>
-        <radialGradient id="crater-sombra-grad" cx="30%" cy="30%" r="50%">
-          <stop offset="0%" stop-color="#888888" stop-opacity="0.6" />
-          <stop offset="100%" stop-color="#666666" stop-opacity="0.4" />
-        </radialGradient>
         
-        <!-- MÁSCARA CORREGIDA para que funcione con translate -->
+        <!-- MÁSCARA PARA FASES LUNARES -->
         <mask id="mascara-fase-lunar">
           <rect x="0" y="0" width="48" height="48" fill="white" />
           <circle id="sombra-movil" cx="24" cy="24" r="24" fill="black" />
@@ -431,11 +427,6 @@ body{
       <!-- Sombra con máscara para fases -->
       <circle cx="24" cy="24" r="22" fill="url(#luna-sombra-grad)" mask="url(#mascara-fase-lunar)"/>
       
-      <!-- Cráteres en sombra -->
-      <circle cx="16" cy="17" r="6" fill="#666666" opacity="0.3" mask="url(#mascara-fase-lunar)"/>
-      <circle cx="33" cy="30" r="5.5" fill="#666666" opacity="0.3" mask="url(#mascara-fase-lunar)"/>
-      <circle cx="29" cy="15" r="5" fill="#666666" opacity="0.3" mask="url(#mascara-fase-lunar)"/>
-      
       <!-- Halo -->
       <circle cx="24" cy="24" r="26" fill="none" stroke="#FFF2A6" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.4"/>
     </svg>
@@ -444,7 +435,7 @@ body{
 </div>
 
 <script>
-// ===== TU CÓDIGO CON LAS CORRECCIONES MÍNIMAS NECESARIAS =====
+// ===== SOLUCIÓN: OPEN-METEO API (GRATIS, SIN API KEY) =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -460,7 +451,7 @@ const capaDia = document.getElementById("capaDia");
 const capaNoche = document.getElementById("capaNoche");
 const climaCapa = document.getElementById("climaCapa");
 
-const API_KEY = '788dd3b3a00a8c60f64f75bd2f0c33f0';
+// TULUÁ, VALLE DEL CAUCA
 const LAT = '4.0929';
 const LON = '-76.2165';
 
@@ -493,20 +484,16 @@ function calcularFaseLunar() {
   return ((diff / ciclo) % 1 + 1) % 1;
 }
 
-// ===== ACTUALIZAR MÁSCARA LUNAR CORREGIDA =====
+// ===== ACTUALIZAR MÁSCARA LUNAR =====
 function actualizarMascaraLunar(fase) {
   if (!sombraMovil) return;
   
-  // fase 0 = luna nueva (sombra tapa todo) → cx = 48
-  // fase 0.5 = luna llena (sombra no tapa nada) → cx = 0
-  // fase 0.25 = cuarto creciente → cx = 24
   let cx;
-  
   if (fase < 0.5) {
-    // Creciente: sombra se mueve de 48 a 0
+    // Creciente
     cx = 48 - (fase * 96);
   } else {
-    // Menguante: sombra se mueve de 0 a 48
+    // Menguante
     cx = (fase - 0.5) * 96;
   }
   
@@ -525,17 +512,49 @@ function getFaseLunarInfo(f) {
   return { emoji: '🌘', nombre: 'Menguante' };
 }
 
-function getClimaEmoji(desc){
-  const d = desc.toLowerCase();
-  if(d.includes('clear')||d.includes('despejado')) return '☀️';
-  if(d.includes('cloud')||d.includes('nube')) return '☁️';
-  if(d.includes('rain')||d.includes('lluvia')) return '🌧️';
-  if(d.includes('storm')||d.includes('tormenta')) return '⛈️';
-  if(d.includes('partly')||d.includes('parcial')) return '⛅';
+// ===== NUEVA FUNCIÓN: OBTENER CLIMA DE OPEN-METEO =====
+function getClimaEmojiFromCode(code, isDay) {
+  // Códigos WMO: https://open-meteo.com/en/docs
+  code = parseInt(code);
+  
+  if (code === 0) return '☀️';
+  if (code === 1) return isDay ? '🌤️' : '🌤️';
+  if (code === 2) return '⛅';
+  if (code === 3) return '☁️';
+  if (code >= 45 && code <= 48) return '🌫️';
+  if (code >= 51 && code <= 55) return '🌧️';
+  if (code >= 56 && code <= 57) return '🌧️';
+  if (code >= 61 && code <= 65) return '🌧️';
+  if (code >= 66 && code <= 67) return '🌧️';
+  if (code >= 71 && code <= 75) return '🌧️'; // Tuluá: lluvia (no nieve)
+  if (code >= 80 && code <= 82) return '🌧️';
+  if (code >= 85 && code <= 86) return '🌧️'; // Tuluá: lluvia
+  if (code >= 95) return '⛈️';
+  
   return '🌤️';
 }
 
-// ===== FUNCIONES DE CLIMA CORREGIDAS =====
+function getDescripcionFromCode(code) {
+  code = parseInt(code);
+  
+  if (code === 0) return 'DESPEJADO';
+  if (code === 1) return 'MAYORMENTE DESPEJADO';
+  if (code === 2) return 'PARCIALMENTE NUBLADO';
+  if (code === 3) return 'NUBLADO';
+  if (code >= 45 && code <= 48) return 'NIEBLA';
+  if (code >= 51 && code <= 55) return 'LLOVIZNA';
+  if (code >= 56 && code <= 57) return 'LLOVIZNA';
+  if (code >= 61 && code <= 65) return 'LLUVIA';
+  if (code >= 66 && code <= 67) return 'LLUVIA';
+  if (code >= 71 && code <= 75) return 'LLUVIA';
+  if (code >= 80 && code <= 82) return 'CHUBASCOS';
+  if (code >= 85 && code <= 86) return 'LLUVIA';
+  if (code >= 95) return 'TORMENTA';
+  
+  return 'PARCIALMENTE NUBLADO';
+}
+
+// ===== FUNCIONES DE CLIMA (TUS ORIGINALES) =====
 function crearElementosClima(tipo, cantidad, esNoche){
   const fragment = document.createDocumentFragment();
   for(let i = 0; i < cantidad; i++){
@@ -565,49 +584,57 @@ function crearElementosClima(tipo, cantidad, esNoche){
 function actualizarClimaFondo(desc, esNoche){
   if(!climaCapa) return;
   
-  // Limpiar capa de clima
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
   
   const d = desc.toLowerCase();
   
-  // Tormenta (incluye rayos y lluvia intensa)
   if(d.includes('tormenta')){
     const rayo = document.createElement('div');
     rayo.className = 'rayo';
     climaCapa.appendChild(rayo);
     climaCapa.appendChild(crearElementosClima('tormenta', 40, esNoche));
   }
-  // Lluvia
-  else if(d.includes('lluvia')){
+  else if(d.includes('lluvia') || d.includes('llovizna') || d.includes('chubascos')){
     climaCapa.appendChild(crearElementosClima('lluvia', 30, esNoche));
   }
-  // Nubes (si no es parcialmente nublado)
-  if(d.includes('nube') && !d.includes('parcial')){
+  
+  if(d.includes('nublado') && !d.includes('parcial')){
     climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
   }
   
   animacionesClimaActivas = true;
 }
 
+// ===== NUEVA FUNCIÓN: FETCH CLIMA CON OPEN-METEO =====
 function fetchClima(){
-  fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`)
-    .then(r => r.json())
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&timezone=auto`;
+  
+  fetch(url)
+    .then(r => {
+      if (!r.ok) throw new Error(`Error: ${r.status}`);
+      return r.json();
+    })
     .then(data => {
-      const temp = Math.round(data.main.temp);
-      const desc = data.weather[0].description;
-      const emoji = getClimaEmoji(desc);
+      const weather = data.current_weather;
+      const temp = Math.round(weather.temperature);
+      const weatherCode = weather.weathercode;
+      const isDay = weather.is_day === 1;
+      
+      const emoji = getClimaEmojiFromCode(weatherCode, isDay);
+      const descripcion = getDescripcionFromCode(weatherCode);
+      
       temperaturaEl.innerHTML = `${temp}°`;
-      climaDescEl.innerHTML = `${emoji} ${desc.toUpperCase()}`;
+      climaDescEl.innerHTML = `${emoji} ${descripcion}`;
       
       // Solo actualizar si cambió la descripción
-      if(desc !== climaActual){
-        climaActual = desc;
-        const now = getHoraColombia();
-        const esNoche = now.getHours() < 6 || now.getHours() >= 18;
-        actualizarClimaFondo(desc, esNoche);
+      const descKey = descripcion + (isDay ? '-dia' : '-noche');
+      if(descKey !== climaActual){
+        climaActual = descKey;
+        actualizarClimaFondo(descripcion, !isDay); // !isDay = es noche
       }
     })
-    .catch(() => {
+    .catch(error => {
+      console.error('Error clima:', error);
       temperaturaEl.innerHTML = '24°';
       climaDescEl.innerHTML = '🌤️ TULUÁ';
     });
@@ -664,14 +691,17 @@ function actualizar(){
   // Actualizar clima de fondo si cambia día/noche
   if(esNoche !== window.esNocheAnterior){
     window.esNocheAnterior = esNoche;
-    if(climaActual) actualizarClimaFondo(climaActual, esNoche);
+    // No actualizar aquí, solo cuando cambia el clima
   }
 }
 
 // Inicializar
 window.esNocheAnterior = getHoraColombia().getHours() < 6 || getHoraColombia().getHours() >= 18;
+
+// ¡IMPORTANTE! Primera llamada y luego cada 10 minutos
 fetchClima();
 setInterval(fetchClima, 600000); // Actualizar clima cada 10 minutos
+
 setInterval(actualizar, 100); // Actualizar posición cada 100ms
 actualizar();
 
@@ -679,7 +709,7 @@ actualizar();
 setTimeout(() => {
   if(climaActual) {
     const esNoche = getHoraColombia().getHours() < 6 || getHoraColombia().getHours() >= 18;
-    actualizarClimaFondo(climaActual, esNoche);
+    // Esto se maneja en fetchClima
   }
 }, 500);
 </script>
