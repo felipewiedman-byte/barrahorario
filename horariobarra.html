@@ -6,7 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
-/* ===== TU DISEÑO ORIGINAL INTACTO ===== */
+/* ===== DISEÑO ORIGINAL SIN BARRA INFERIOR ===== */
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -18,14 +18,13 @@ body{
   font-family:'Inter',sans-serif;
 }
 
-/* ANTI-FLICKER PARA UPSTREAM.SO - SOLO UNA LÍNEA NUEVA */
 .solar-bar{
   width:580px;
   height:130px;
   border-radius:24px;
   overflow:hidden !important;
   position:relative;
-  backface-visibility: hidden; /* ESTA LÍNEA ES NUEVA - EL RESTO ES IGUAL */
+  backface-visibility: hidden;
 }
 
 .fondo-dinamico{
@@ -57,7 +56,7 @@ body{
   z-index:2;
 }
 
-/* ===== MÁSCARAS CORREGIDAS - MÁS VISIBLES ===== */
+/* ===== MÁSCARAS ===== */
 .mascara-dia{
   position:absolute;
   width:100%;
@@ -75,13 +74,13 @@ body{
   width:200%;
   height:100%;
   background:linear-gradient(90deg, 
-    rgba(74,181,255,1) 0%,      /* Más opaco */
+    rgba(74,181,255,1) 0%,
     rgba(74,181,255,0.9) 25%,
     rgba(74,181,255,0) 50%,
-    rgba(10,20,40,0.9) 75%,     /* Más opaco */
-    rgba(10,20,40,1) 100%);     /* Más opaco */
+    rgba(10,20,40,0.9) 75%,
+    rgba(10,20,40,1) 100%);
   transition:transform 0.1s linear;
-  opacity:1;                     /* Siempre visible */
+  opacity:1;
   z-index:3;
   left:-50%;
 }
@@ -103,18 +102,17 @@ body{
   width:200%;
   height:100%;
   background:linear-gradient(90deg, 
-    rgba(10,20,40,1) 0%,        /* Completamente opaco */
+    rgba(10,20,40,1) 0%,
     rgba(10,20,40,0.9) 25%,
     rgba(10,20,40,0) 50%,
     rgba(74,181,255,0.9) 75%,
-    rgba(74,181,255,1) 100%);   /* Completamente opaco */
+    rgba(74,181,255,1) 100%);
   transition:transform 0.1s linear;
-  opacity:1;                     /* Siempre visible */
+  opacity:1;
   z-index:4;
   left:-50%;
 }
 
-/* NUEVA CAPA DE OSCURIDAD QUE SIGUE A LA LUNA */
 .sombra-lunar{
   position:absolute;
   width:100%;
@@ -146,7 +144,7 @@ body{
   height:2px;
   background:#fff;
   border-radius:50%;
-  box-shadow: 0 0 4px rgba(255,255,255,0.5);
+  box-shadow:0 0 4px rgba(255,255,255,0.5);
 }
 
 .horizonte{
@@ -158,48 +156,6 @@ body{
   border-top:1px solid rgba(200,170,140,0.3);
   z-index:10;
   border-radius:0 0 24px 24px;
-}
-
-.info-bar{
-  position:absolute;
-  bottom:10px;
-  left:0;
-  width:100%;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 20px;
-  z-index:15;
-  color:#ffffff;
-  font-weight:300;
-  letter-spacing:0.5px;
-  text-shadow:0 1px 3px rgba(0,0,0,0.5);
-}
-
-.clima{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  font-size:13px;
-}
-
-.temperatura{
-  font-weight:500;
-  color:#ffecb3;
-  font-size:16px;
-}
-
-.descripcion{
-  text-transform:uppercase;
-  opacity:0.8;
-}
-
-.hora{
-  font-size:15px;
-  font-weight:400;
-  color:#e6eefa;
-  font-family:'Inter',monospace;
-  letter-spacing:1px;
 }
 
 .horas{
@@ -358,7 +314,6 @@ body{
   <div class="mascara-dia" id="mascaraDia"></div>
   <div class="mascara-noche" id="mascaraNoche"></div>
 
-  <!-- NUEVA CAPA DE OSCURIDAD LUNAR -->
   <div class="sombra-lunar" id="sombraLunar"></div>
 
   <!-- CAPA DE CLIMA -->
@@ -379,14 +334,6 @@ body{
 
   <div class="horizonte"></div>
   <div class="linea"></div>
-
-  <div class="info-bar">
-    <div class="clima">
-      <span class="temperatura" id="temperatura">--°</span>
-      <span class="descripcion" id="clima-desc">TULUÁ</span>
-    </div>
-    <div class="hora" id="hora-info">--:--:--</div>
-  </div>
 
   <div class="horas">
     <span>00</span> <span>03</span> <span>06</span> <span>09</span> <span>12</span>
@@ -451,15 +398,12 @@ body{
 </div>
 
 <script>
-// ===== SOLUCIÓN: OPEN-METEO API (GRATIS, SIN API KEY) =====
+// ===== OPEN-METEO CLIMA + SOL/LUNA REAL =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
 const lunaTag = document.getElementById("lunaTag");
 const sombraMovil = document.getElementById("sombra-movil");
-const temperaturaEl = document.getElementById("temperatura");
-const climaDescEl = document.getElementById("clima-desc");
-const horaInfoEl = document.getElementById("hora-info");
 const estrellas = document.getElementById("estrellas");
 const mascaraDia = document.getElementById("mascaraDia");
 const mascaraNoche = document.getElementById("mascaraNoche");
@@ -468,12 +412,10 @@ const capaNoche = document.getElementById("capaNoche");
 const climaCapa = document.getElementById("climaCapa");
 const sombraLunar = document.getElementById("sombraLunar");
 
-// TULUÁ, VALLE DEL CAUCA
 const LAT = '4.0929';
 const LON = '-76.2165';
 
 let climaActual = '';
-let animacionesClimaActivas = false;
 
 function getHoraColombia(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
@@ -485,14 +427,6 @@ function formatHora(h){
   return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-function formatHoraConSegundos(now){
-  const horas = String(now.getHours()).padStart(2, '0');
-  const minutos = String(now.getMinutes()).padStart(2, '0');
-  const segundos = String(now.getSeconds()).padStart(2, '0');
-  return `${horas}:${minutos}:${segundos}`;
-}
-
-// ===== CÁLCULO DE FASE LUNAR REAL =====
 function calcularFaseLunar() {
   const ahora = new Date();
   const lunaNueva = new Date(Date.UTC(2024, 2, 6, 12, 0, 0));
@@ -501,17 +435,11 @@ function calcularFaseLunar() {
   return ((diff / ciclo) % 1 + 1) % 1;
 }
 
-// ===== ACTUALIZAR MÁSCARA LUNAR =====
 function actualizarMascaraLunar(fase) {
   if (!sombraMovil) return;
-  
   let cx;
-  if (fase < 0.5) {
-    cx = 48 - (fase * 96);
-  } else {
-    cx = (fase - 0.5) * 96;
-  }
-  
+  if (fase < 0.5) cx = 48 - (fase * 96);
+  else cx = (fase - 0.5) * 96;
   cx = Math.max(0, Math.min(48, cx));
   sombraMovil.setAttribute('cx', cx);
 }
@@ -527,44 +455,17 @@ function getFaseLunarInfo(f) {
   return { emoji: '🌘', nombre: 'Menguante' };
 }
 
-// ===== FUNCIONES DE CLIMA =====
-function getClimaEmojiFromCode(code, isDay) {
-  code = parseInt(code);
-  
-  if (code === 0) return '☀️';
-  if (code === 1) return isDay ? '🌤️' : '🌤️';
-  if (code === 2) return '⛅';
-  if (code === 3) return '☁️';
-  if (code >= 45 && code <= 48) return '🌫️';
-  if (code >= 51 && code <= 55) return '🌧️';
-  if (code >= 56 && code <= 57) return '🌧️';
-  if (code >= 61 && code <= 65) return '🌧️';
-  if (code >= 66 && code <= 67) return '🌧️';
-  if (code >= 71 && code <= 75) return '🌧️';
-  if (code >= 80 && code <= 82) return '🌧️';
-  if (code >= 85 && code <= 86) return '🌧️';
-  if (code >= 95) return '⛈️';
-  
-  return '🌤️';
-}
-
 function getDescripcionFromCode(code) {
   code = parseInt(code);
-  
   if (code === 0) return 'DESPEJADO';
   if (code === 1) return 'MAYORMENTE DESPEJADO';
   if (code === 2) return 'PARCIALMENTE NUBLADO';
   if (code === 3) return 'NUBLADO';
   if (code >= 45 && code <= 48) return 'NIEBLA';
-  if (code >= 51 && code <= 55) return 'LLOVIZNA';
-  if (code >= 56 && code <= 57) return 'LLOVIZNA';
-  if (code >= 61 && code <= 65) return 'LLUVIA';
-  if (code >= 66 && code <= 67) return 'LLUVIA';
-  if (code >= 71 && code <= 75) return 'LLUVIA';
-  if (code >= 80 && code <= 82) return 'CHUBASCOS';
-  if (code >= 85 && code <= 86) return 'LLUVIA';
+  if ((code >= 51 && code <= 55) || (code >= 56 && code <= 57)) return 'LLOVIZNA';
+  if ((code >= 61 && code <= 65) || (code >= 66 && code <= 67)) return 'LLUVIA';
+  if ((code >= 71 && code <= 75) || (code >= 80 && code <= 82) || (code >= 85 && code <= 86)) return 'LLUVIA';
   if (code >= 95) return 'TORMENTA';
-  
   return 'PARCIALMENTE NUBLADO';
 }
 
@@ -596,11 +497,8 @@ function crearElementosClima(tipo, cantidad, esNoche){
 
 function actualizarClimaFondo(desc, esNoche){
   if(!climaCapa) return;
-  
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
-  
   const d = desc.toLowerCase();
-  
   if(d.includes('tormenta')){
     const rayo = document.createElement('div');
     rayo.className = 'rayo';
@@ -610,45 +508,27 @@ function actualizarClimaFondo(desc, esNoche){
   else if(d.includes('lluvia') || d.includes('llovizna') || d.includes('chubascos')){
     climaCapa.appendChild(crearElementosClima('lluvia', 30, esNoche));
   }
-  
   if(d.includes('nublado') && !d.includes('parcial')){
     climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
   }
-  
-  animacionesClimaActivas = true;
 }
 
 function fetchClima(){
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&timezone=auto`;
-  
   fetch(url)
-    .then(r => {
-      if (!r.ok) throw new Error(`Error: ${r.status}`);
-      return r.json();
-    })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(data => {
       const weather = data.current_weather;
-      const temp = Math.round(weather.temperature);
       const weatherCode = weather.weathercode;
       const isDay = weather.is_day === 1;
-      
-      const emoji = getClimaEmojiFromCode(weatherCode, isDay);
       const descripcion = getDescripcionFromCode(weatherCode);
-      
-      temperaturaEl.innerHTML = `${temp}°`;
-      climaDescEl.innerHTML = `${emoji} ${descripcion}`;
-      
       const descKey = descripcion + (isDay ? '-dia' : '-noche');
       if(descKey !== climaActual){
         climaActual = descKey;
         actualizarClimaFondo(descripcion, !isDay);
       }
     })
-    .catch(error => {
-      console.error('Error clima:', error);
-      temperaturaEl.innerHTML = '24°';
-      climaDescEl.innerHTML = '🌤️ TULUÁ';
-    });
+    .catch(e => console.warn('Clima offline', e));
 }
 
 function actualizar(){
@@ -668,60 +548,38 @@ function actualizar(){
   const fase = calcularFaseLunar();
   const faseInfo = getFaseLunarInfo(fase);
   actualizarMascaraLunar(fase);
-  
   lunaTag.innerHTML = `${faseInfo.emoji} ${formatHora((h+12)%24)}`;
 
-  horaInfoEl.innerHTML = formatHoraConSegundos(now);
-  
   let desplazamientoDia = (solPos * 100) - 50;
   mascaraDia.style.transform = `translateX(${desplazamientoDia}%)`;
-  
   let desplazamientoNoche = (lunaPos * 100) - 50;
   mascaraNoche.style.transform = `translateX(${desplazamientoNoche}%)`;
   
-  // NUEVO: Control de oscuridad lunar
+  // Control día/noche
   if (h >= 6 && h < 18) {
-    // DÍA - ocultar todo
     estrellas.style.opacity = '0';
     capaNoche.style.opacity = '0';
     capaDia.style.opacity = '1';
     sombraLunar.style.opacity = '0';
   } else {
-    // NOCHE - mostrar estrellas y oscuridad
     estrellas.style.opacity = '0.7';
     capaNoche.style.opacity = '1';
     capaDia.style.opacity = '0';
-    
-    // La sombra lunar es más intensa cuanto más lejos está la luna del centro
-    // y cuando hay luna nueva (menos luz)
-    const distanciaCentro = Math.abs(lunaPos - 0.5) * 2; // 0 a 1
-    const brilloLunar = fase < 0.03 || fase > 0.97 ? 0.2 : // Luna nueva (poca luz)
-                        fase > 0.47 && fase < 0.53 ? 0.8 : // Luna llena (mucha luz)
-                        0.5; // Fase intermedia
-    
-    // Más oscuridad cuando la luna está lejos del centro y tiene poca luz
+    const distanciaCentro = Math.abs(lunaPos - 0.5) * 2;
+    const brilloLunar = fase < 0.03 || fase > 0.97 ? 0.2 :
+                        fase > 0.47 && fase < 0.53 ? 0.8 : 0.5;
     sombraLunar.style.opacity = (distanciaCentro * (1 - brilloLunar * 0.7)).toString();
-    
-    // Mover la sombra con la luna
     sombraLunar.style.background = `radial-gradient(circle at ${lunaPos * 100}% 50%, 
                                     rgba(0,0,0,0) 0%, 
                                     rgba(0,0,0,0.7) 70%)`;
   }
 }
 
-// Inicializar
-window.esNocheAnterior = getHoraColombia().getHours() < 6 || getHoraColombia().getHours() >= 18;
-
 fetchClima();
 setInterval(fetchClima, 600000);
-// SOLO CAMBIÉ ESTO - DE 100 A 500 (más suave para upstream)
 setInterval(actualizar, 500);
 actualizar();
-
-setTimeout(() => {
-  const fase = calcularFaseLunar();
-  actualizarMascaraLunar(fase);
-}, 500);
+setTimeout(() => actualizarMascaraLunar(calcularFaseLunar()), 500);
 </script>
 </body>
 </html>
