@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Tiempo Real · Tuluá · 100% FUNCIONAL</title>
+<title>Solar Bar · Tiempo Real · Tuluá · Fases Lunares CORREGIDAS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -145,6 +145,12 @@ body{
   background:#fff;
   border-radius:50%;
   box-shadow:0 0 4px rgba(255,255,255,0.5);
+  animation:parpadear 1.5s ease-in-out infinite;
+}
+
+@keyframes parpadear{
+  0%,100%{opacity:0.3;}
+  50%{opacity:1;}
 }
 
 .horizonte{
@@ -244,62 +250,65 @@ body{
   z-index:9;
 }
 
-/* ===== EFECTOS DE CLIMA ===== */
+/* ===== EFECTOS DE CLIMA MEJORADOS ===== */
 .gota{
   position:absolute;
-  width:2px;
-  background:rgba(255,255,255,0.7);
-  border-radius:0 0 5px 5px;
+  width:3px;
+  background:linear-gradient(180deg, rgba(200,230,255,0.9), rgba(150,200,255,0.3));
+  border-radius:0 0 3px 3px;
   animation:llover linear infinite;
   z-index:6;
 }
 
 @keyframes llover{
   0%{transform:translateY(-20px); opacity:0;}
-  20%{opacity:1;}
+  20%{opacity:0.8;}
   100%{transform:translateY(150px); opacity:0;}
 }
 
 .gota-noche{
-  background:rgba(180,200,255,0.6);
+  background:linear-gradient(180deg, rgba(180,200,255,0.8), rgba(100,150,200,0.2));
 }
 
 .nube{
   position:absolute;
-  background:rgba(255,255,255,0.3);
+  background:rgba(255,255,255,0.5);
   border-radius:50px;
-  filter:blur(10px);
+  filter:blur(12px);
   animation:flotarNube linear infinite;
   z-index:6;
+  box-shadow:0 0 15px rgba(255,255,255,0.3);
 }
 
 .nube-dia{
-  background:rgba(255,255,255,0.4);
+  background:rgba(255,255,255,0.6);
 }
 
 .nube-noche{
-  background:rgba(100,120,150,0.3);
+  background:rgba(150,170,200,0.4);
 }
 
 @keyframes flotarNube{
-  0%{left:-100px;}
-  100%{left:700px;}
+  0%{left:-120px;}
+  100%{left:620px;}
 }
 
 .rayo{
   position:absolute;
   width:100%;
   height:100%;
-  background:rgba(255,255,255,0.4);
+  background:radial-gradient(circle at 50% 40%, rgba(255,255,200,0.8), rgba(255,200,100,0.4), transparent);
   opacity:0;
-  animation:relampago 5s infinite;
+  animation:relampago 4s infinite;
   z-index:6;
 }
 
 @keyframes relampago{
-  0%,95%,98%{opacity:0;}
-  96%{opacity:0.5;}
-  97%{opacity:0;}
+  0%,92%,94%,96%,98%,100%{opacity:0;}
+  93%{opacity:0.6;}
+  95%{opacity:0.8;}
+  97%{opacity:0.4;}
+  99%{opacity:0.2;}
 }
 </style>
 </head>
@@ -320,16 +329,19 @@ body{
   <div id="climaCapa" style="position:absolute; width:100%; height:100%; z-index:6; pointer-events:none; overflow:hidden; border-radius:24px;"></div>
 
   <div class="estrellas" id="estrellas">
-    <span style="top:15%;left:55%"></span>
-    <span style="top:25%;left:62%"></span>
-    <span style="top:35%;left:70%"></span>
-    <span style="top:45%;left:78%"></span>
-    <span style="top:55%;left:85%"></span>
-    <span style="top:20%;left:90%"></span>
-    <span style="top:65%;left:72%"></span>
-    <span style="top:75%;left:45%"></span>
-    <span style="top:30%;left:30%"></span>
-    <span style="top:80%;left:15%"></span>
+    <span style="top:15%;left:55%;animation-delay:0s"></span>
+    <span style="top:25%;left:62%;animation-delay:0.5s"></span>
+    <span style="top:35%;left:70%;animation-delay:1s"></span>
+    <span style="top:45%;left:78%;animation-delay:1.5s"></span>
+    <span style="top:55%;left:85%;animation-delay:2s"></span>
+    <span style="top:20%;left:90%;animation-delay:2.5s"></span>
+    <span style="top:65%;left:72%;animation-delay:3s"></span>
+    <span style="top:75%;left:45%;animation-delay:0.2s"></span>
+    <span style="top:30%;left:30%;animation-delay:0.7s"></span>
+    <span style="top:80%;left:15%;animation-delay:1.2s"></span>
+    <span style="top:12%;left:40%;animation-delay:1.8s"></span>
+    <span style="top:70%;left:55%;animation-delay:2.2s"></span>
+    <span style="top:40%;left:85%;animation-delay:2.8s"></span>
   </div>
 
   <div class="horizonte"></div>
@@ -359,51 +371,50 @@ body{
     <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
   </div>
 
-  <!-- LUNA CON FASES REALES -->
+  <!-- LUNA CON FASES REALES - VERSIÓN CORREGIDA -->
   <div id="luna" class="astro">
-    <svg viewBox="0 0 48 48">
+    <svg viewBox="0 0 48 48" id="lunaSvg">
       <defs>
         <radialGradient id="luna-grad" cx="30%" cy="30%" r="60%">
-          <stop offset="0%" stop-color="#FFFFFF" />
-          <stop offset="70%" stop-color="#FFF2A6" />
-          <stop offset="100%" stop-color="#E6D896" />
-        </radialGradient>
-        <radialGradient id="luna-sombra-grad" cx="30%" cy="30%" r="60%">
-          <stop offset="0%" stop-color="#777777" stop-opacity="0.8" />
-          <stop offset="70%" stop-color="#666666" stop-opacity="0.8" />
-          <stop offset="100%" stop-color="#555555" stop-opacity="0.8" />
-        </radialGradient>
-        <radialGradient id="crater-grad" cx="30%" cy="30%" r="50%">
-          <stop offset="0%" stop-color="#D4C87C" stop-opacity="0.6" />
-          <stop offset="100%" stop-color="#B8A878" stop-opacity="0.3" />
+          <stop offset="0%" stop-color="#FFF9E6" />
+          <stop offset="70%" stop-color="#FFEFB0" />
+          <stop offset="100%" stop-color="#F0E090" />
         </radialGradient>
         
-        <mask id="mascara-fase-lunar">
+        <!-- MÁSCARA DINÁMICA PARA LA FASE LUNAR -->
+        <mask id="faseMask">
           <rect x="0" y="0" width="48" height="48" fill="white" />
-          <circle id="sombra-movil" cx="24" cy="24" r="24" fill="black" />
+          <circle id="sombraFase" cx="24" cy="24" r="24" fill="black" />
         </mask>
       </defs>
       
-      <circle cx="24" cy="24" r="22" fill="url(#luna-grad)"/>
-      <circle cx="16" cy="17" r="6" fill="url(#crater-grad)"/>
-      <circle cx="33" cy="30" r="5.5" fill="url(#crater-grad)"/>
-      <circle cx="29" cy="15" r="5" fill="url(#crater-grad)"/>
+      <!-- Base de la luna (parte visible) -->
+      <circle cx="24" cy="24" r="22" fill="url(#luna-grad)" />
       
-      <circle cx="24" cy="24" r="22" fill="url(#luna-sombra-grad)" mask="url(#mascara-fase-lunar)"/>
+      <!-- Cráteres decorativos -->
+      <circle cx="16" cy="17" r="3.5" fill="rgba(180,150,80,0.5)" />
+      <circle cx="33" cy="30" r="3" fill="rgba(160,130,70,0.5)" />
+      <circle cx="29" cy="15" r="2.5" fill="rgba(170,140,75,0.5)" />
+      <circle cx="38" cy="20" r="2" fill="rgba(150,120,65,0.5)" />
+      <circle cx="10" cy="32" r="2" fill="rgba(155,125,70,0.5)" />
       
-      <circle cx="24" cy="24" r="26" fill="none" stroke="#FFF2A6" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.4"/>
+      <!-- SOMBRA DE FASE LUNAR (esto crea el efecto de fase real) -->
+      <circle cx="24" cy="24" r="22" fill="rgba(80,70,50,0.85)" mask="url(#faseMask)" />
+      
+      <!-- Borde brillante -->
+      <circle cx="24" cy="24" r="24" fill="none" stroke="#FFF2A6" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.4"/>
     </svg>
     <div id="lunaTag" class="tag luna-tag">🌑 00:00</div>
   </div>
 </div>
 
 <script>
-// ===== OPEN-METEO CLIMA + SOL/LUNA REAL =====
+// ===== OPEN-METEO CLIMA EN TIEMPO REAL + SOL/LUNA CON FASES CORREGIDAS =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
 const lunaTag = document.getElementById("lunaTag");
-const sombraMovil = document.getElementById("sombra-movil");
+const sombraFase = document.getElementById("sombraFase");
 const estrellas = document.getElementById("estrellas");
 const mascaraDia = document.getElementById("mascaraDia");
 const mascaraNoche = document.getElementById("mascaraNoche");
@@ -412,8 +423,8 @@ const capaNoche = document.getElementById("capaNoche");
 const climaCapa = document.getElementById("climaCapa");
 const sombraLunar = document.getElementById("sombraLunar");
 
-const LAT = '4.0929';
-const LON = '-76.2165';
+const LAT = '4.08466';
+const LON = '-76.19536';
 
 let climaActual = '';
 
@@ -427,29 +438,44 @@ function formatHora(h){
   return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
+// CALCULAR FASE LUNAR REAL (basado en fecha astronómica)
 function calcularFaseLunar() {
   const ahora = new Date();
-  const lunaNueva = new Date(Date.UTC(2024, 2, 6, 12, 0, 0));
-  const ciclo = 29.530588853 * 24 * 60 * 60 * 1000;
-  const diff = ahora - lunaNueva;
-  return ((diff / ciclo) % 1 + 1) % 1;
+  // Referencia: Luna Nueva conocida (1 de enero de 2020)
+  const lunaNuevaReferencia = new Date(Date.UTC(2020, 0, 1, 0, 0, 0));
+  const cicloLunar = 29.53058867; // días
+  const diffDias = (ahora - lunaNuevaReferencia) / (1000 * 60 * 60 * 24);
+  const fase = (diffDias % cicloLunar) / cicloLunar;
+  return fase;
 }
 
+// ACTUALIZAR MÁSCARA DE FASE LUNAR
 function actualizarMascaraLunar(fase) {
-  if (!sombraMovil) return;
+  if (!sombraFase) return;
+  // fase: 0 = Luna Nueva, 0.5 = Luna Llena
+  // Calcular posición de la sombra: se mueve de izquierda a derecha
   let cx;
-  if (fase < 0.5) cx = 48 - (fase * 96);
-  else cx = (fase - 0.5) * 96;
+  if (fase <= 0.5) {
+    // Menguante a creciente (sombra por la izquierda)
+    cx = 24 - (fase * 48);
+  } else {
+    // Creciente a menguante (sombra por la derecha)
+    cx = 24 + ((fase - 0.5) * 48);
+  }
   cx = Math.max(0, Math.min(48, cx));
-  sombraMovil.setAttribute('cx', cx);
+  sombraFase.setAttribute('cx', cx);
+  
+  // Registrar en consola para verificar
+  const fasePorcentaje = Math.round(fase * 100);
+  console.log(`🌙 Fase lunar: ${fasePorcentaje}% | Posición sombra: ${Math.round(cx)}px`);
 }
 
 function getFaseLunarInfo(f) {
-  if (f < 0.03 || f > 0.97) return { emoji: '🌑', nombre: 'Nueva' };
+  if (f < 0.03 || f > 0.97) return { emoji: '🌑', nombre: 'Luna Nueva' };
   if (f < 0.23) return { emoji: '🌒', nombre: 'Creciente' };
   if (f < 0.27) return { emoji: '🌓', nombre: 'Cuarto Creciente' };
   if (f < 0.47) return { emoji: '🌔', nombre: 'Gibosa Creciente' };
-  if (f < 0.53) return { emoji: '🌕', nombre: 'Llena' };
+  if (f < 0.53) return { emoji: '🌕', nombre: 'Luna Llena' };
   if (f < 0.73) return { emoji: '🌖', nombre: 'Gibosa Menguante' };
   if (f < 0.77) return { emoji: '🌗', nombre: 'Cuarto Menguante' };
   return { emoji: '🌘', nombre: 'Menguante' };
@@ -471,26 +497,57 @@ function getDescripcionFromCode(code) {
 
 function crearElementosClima(tipo, cantidad, esNoche){
   const fragment = document.createDocumentFragment();
-  for(let i = 0; i < cantidad; i++){
-    let el;
-    if(tipo === 'lluvia' || tipo === 'tormenta'){
-      el = document.createElement('div');
+  
+  if(tipo === 'tormenta'){
+    const rayoDiv = document.createElement('div');
+    rayoDiv.className = 'rayo';
+    fragment.appendChild(rayoDiv);
+    
+    for(let i = 0; i < cantidad + 20; i++){
+      const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
       el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = (tipo === 'tormenta' ? 0.3 : 0.5) + Math.random() * 0.3 + 's';
+      el.style.animationDuration = (0.2 + Math.random() * 0.3) + 's';
       el.style.animationDelay = Math.random() * 2 + 's';
-      el.style.height = (tipo === 'tormenta' ? 10 : 8) + Math.random() * 10 + 'px';
+      el.style.height = (12 + Math.random() * 15) + 'px';
+      el.style.width = '4px';
+      fragment.appendChild(el);
     }
-    if(tipo === 'nube'){
-      el = document.createElement('div');
+  }
+  else if(tipo === 'lluvia'){
+    for(let i = 0; i < cantidad; i++){
+      const el = document.createElement('div');
+      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (0.3 + Math.random() * 0.4) + 's';
+      el.style.animationDelay = Math.random() * 2 + 's';
+      el.style.height = (8 + Math.random() * 12) + 'px';
+      fragment.appendChild(el);
+    }
+  }
+  else if(tipo === 'nublado'){
+    for(let i = 0; i < 4; i++){
+      const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 50 + Math.random() * 50 + 'px';
-      el.style.height = 15 + Math.random() * 20 + 'px';
-      el.style.top = 10 + Math.random() * 50 + '%';
-      el.style.animationDuration = 12 + Math.random() * 10 + 's';
+      el.style.width = 70 + Math.random() * 100 + 'px';
+      el.style.height = 25 + Math.random() * 30 + 'px';
+      el.style.top = 10 + Math.random() * 55 + '%';
+      el.style.animationDuration = 18 + Math.random() * 12 + 's';
       el.style.animationDelay = -i * 4 + 's';
+      fragment.appendChild(el);
     }
-    if(el) fragment.appendChild(el);
+  }
+  else if(tipo === 'nube'){
+    for(let i = 0; i < cantidad; i++){
+      const el = document.createElement('div');
+      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
+      el.style.width = 60 + Math.random() * 80 + 'px';
+      el.style.height = 20 + Math.random() * 25 + 'px';
+      el.style.top = 15 + Math.random() * 50 + '%';
+      el.style.animationDuration = 15 + Math.random() * 15 + 's';
+      el.style.animationDelay = -i * 5 + 's';
+      fragment.appendChild(el);
+    }
   }
   return fragment;
 }
@@ -498,18 +555,25 @@ function crearElementosClima(tipo, cantidad, esNoche){
 function actualizarClimaFondo(desc, esNoche){
   if(!climaCapa) return;
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
+  
   const d = desc.toLowerCase();
+  console.log('🌦️ Efecto clima:', d);
+  
   if(d.includes('tormenta')){
-    const rayo = document.createElement('div');
-    rayo.className = 'rayo';
-    climaCapa.appendChild(rayo);
-    climaCapa.appendChild(crearElementosClima('tormenta', 40, esNoche));
+    climaCapa.appendChild(crearElementosClima('tormenta', 50, esNoche));
   }
-  else if(d.includes('lluvia') || d.includes('llovizna') || d.includes('chubascos')){
-    climaCapa.appendChild(crearElementosClima('lluvia', 30, esNoche));
+  else if(d.includes('lluvia')){
+    climaCapa.appendChild(crearElementosClima('lluvia', 35, esNoche));
+    climaCapa.appendChild(crearElementosClima('nube', 2, esNoche));
   }
-  if(d.includes('nublado') && !d.includes('parcial')){
-    climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
+  else if(d.includes('llovizna')){
+    climaCapa.appendChild(crearElementosClima('lluvia', 20, esNoche));
+  }
+  else if(d.includes('nublado')){
+    climaCapa.appendChild(crearElementosClima('nublado', 4, esNoche));
+  }
+  else if(d.includes('parcialmente')){
+    climaCapa.appendChild(crearElementosClima('nube', 2, esNoche));
   }
 }
 
@@ -522,13 +586,17 @@ function fetchClima(){
       const weatherCode = weather.weathercode;
       const isDay = weather.is_day === 1;
       const descripcion = getDescripcionFromCode(weatherCode);
+      const temp = weather.temperature;
+      
       const descKey = descripcion + (isDay ? '-dia' : '-noche');
       if(descKey !== climaActual){
         climaActual = descKey;
         actualizarClimaFondo(descripcion, !isDay);
       }
+      
+      console.log(`🌡️ Tuluá: ${Math.round(temp)}°C | ${descripcion}`);
     })
-    .catch(e => console.warn('Clima offline', e));
+    .catch(e => console.warn('⚠️ Clima offline:', e));
 }
 
 function actualizar(){
@@ -545,10 +613,11 @@ function actualizar(){
 
   solTag.innerHTML = `☀️ ${formatHora(h)}`;
   
+  // CALCULAR FASE LUNAR REAL
   const fase = calcularFaseLunar();
   const faseInfo = getFaseLunarInfo(fase);
   actualizarMascaraLunar(fase);
-  lunaTag.innerHTML = `${faseInfo.emoji} ${formatHora((h+12)%24)}`;
+  lunaTag.innerHTML = `${faseInfo.emoji} ${formatHora((h+12)%24)} | ${faseInfo.nombre}`;
 
   let desplazamientoDia = (solPos * 100) - 50;
   mascaraDia.style.transform = `translateX(${desplazamientoDia}%)`;
@@ -575,11 +644,11 @@ function actualizar(){
   }
 }
 
+// Iniciar todo
 fetchClima();
-setInterval(fetchClima, 600000);
+setInterval(fetchClima, 600000); // Cada 10 minutos
 setInterval(actualizar, 500);
 actualizar();
-setTimeout(() => actualizarMascaraLunar(calcularFaseLunar()), 500);
 </script>
 </body>
 </html>
