@@ -250,42 +250,44 @@ body{
   z-index:9;
 }
 
-/* ===== EFECTOS DE CLIMA MEJORADOS ===== */
+/* ===== EFECTOS DE CLIMA MEJORADOS: MÁS VISTOSOS ===== */
 .gota{
   position:absolute;
-  width:3px;
-  background:linear-gradient(180deg, rgba(200,230,255,0.9), rgba(150,200,255,0.3));
+  width:4px;
+  background:linear-gradient(180deg, rgba(100,180,255,0.95), rgba(50,120,200,0.9));
   border-radius:0 0 3px 3px;
   animation:llover linear infinite;
   z-index:6;
+  box-shadow:0 0 2px rgba(100,180,255,0.6);
 }
 
 @keyframes llover{
-  0%{transform:translateY(-20px); opacity:0;}
-  20%{opacity:0.8;}
+  0%{transform:translateY(-20px); opacity:0.8;}
+  20%{opacity:1;}
   100%{transform:translateY(150px); opacity:0;}
 }
 
 .gota-noche{
-  background:linear-gradient(180deg, rgba(180,200,255,0.8), rgba(100,150,200,0.2));
+  background:linear-gradient(180deg, rgba(120,160,255,0.95), rgba(70,110,200,0.9));
+  box-shadow:0 0 3px rgba(150,200,255,0.7);
 }
 
 .nube{
   position:absolute;
-  background:rgba(255,255,255,0.5);
+  background:rgba(255,255,255,0.85);
   border-radius:50px;
-  filter:blur(12px);
+  filter:blur(8px);
   animation:flotarNube linear infinite;
   z-index:6;
-  box-shadow:0 0 15px rgba(255,255,255,0.3);
+  box-shadow:0 0 20px rgba(255,255,255,0.5);
 }
 
 .nube-dia{
-  background:rgba(255,255,255,0.6);
+  background:rgba(255,255,245,0.9);
 }
 
 .nube-noche{
-  background:rgba(150,170,200,0.4);
+  background:rgba(180,200,220,0.7);
 }
 
 @keyframes flotarNube{
@@ -297,18 +299,19 @@ body{
   position:absolute;
   width:100%;
   height:100%;
-  background:radial-gradient(circle at 50% 40%, rgba(255,255,200,0.8), rgba(255,200,100,0.4), transparent);
+  background:radial-gradient(circle at 50% 40%, rgba(255,255,200,0.9), rgba(255,200,100,0.6), transparent);
   opacity:0;
   animation:relampago 4s infinite;
   z-index:6;
+  pointer-events:none;
 }
 
 @keyframes relampago{
   0%,92%,94%,96%,98%,100%{opacity:0;}
-  93%{opacity:0.6;}
-  95%{opacity:0.8;}
-  97%{opacity:0.4;}
-  99%{opacity:0.2;}
+  93%{opacity:0.8;}
+  95%{opacity:1;}
+  97%{opacity:0.6;}
+  99%{opacity:0.3;}
 }
 </style>
 </head>
@@ -409,7 +412,7 @@ body{
 </div>
 
 <script>
-// ===== AHORA CON OPENWEATHERMAP API (CLIMA EN TIEMPO REAL) =====
+// ===== CONFIGURACIÓN CON OPENWEATHERMAP (TU API KEY) Y EFECTOS MEJORADOS =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -439,7 +442,7 @@ function formatHora(h){
   return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-// ========== CÁLCULO DE FASE LUNAR CORREGIDO EN TIEMPO REAL ==========
+// ========== CÁLCULO DE FASE LUNAR CORREGIDO ==========
 function calcularFaseLunar() {
   const newMoonDate = new Date(Date.UTC(2026, 2, 19, 10, 23, 0));
   const ahora = new Date();
@@ -475,7 +478,7 @@ function getFaseLunarInfo(f) {
   return { emoji: '🌘', nombre: 'Menguante' };
 }
 
-// ========== FUNCIONES DE EFECTOS CLIMÁTICOS (NO TOCADAS) ==========
+// ========== EFECTOS CLIMÁTICOS MEJORADOS (MÁS VISTOSOS) ==========
 function crearElementosClima(tipo, cantidad, esNoche){
   const fragment = document.createDocumentFragment();
   
@@ -483,49 +486,76 @@ function crearElementosClima(tipo, cantidad, esNoche){
     const rayoDiv = document.createElement('div');
     rayoDiv.className = 'rayo';
     fragment.appendChild(rayoDiv);
+    // Más gotas y más gruesas
+    for(let i = 0; i < cantidad + 30; i++){
+      const el = document.createElement('div');
+      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (0.15 + Math.random() * 0.25) + 's';
+      el.style.animationDelay = Math.random() * 2 + 's';
+      el.style.height = (15 + Math.random() * 18) + 'px';
+      el.style.width = (4 + Math.random() * 3) + 'px';
+      fragment.appendChild(el);
+    }
+  }
+  else if(tipo === 'lluvia'){
+    // Más gotas, más visibles
     for(let i = 0; i < cantidad + 20; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
       el.style.left = Math.random() * 100 + '%';
       el.style.animationDuration = (0.2 + Math.random() * 0.3) + 's';
       el.style.animationDelay = Math.random() * 2 + 's';
-      el.style.height = (12 + Math.random() * 15) + 'px';
-      el.style.width = '4px';
+      el.style.height = (10 + Math.random() * 15) + 'px';
+      el.style.width = (3 + Math.random() * 3) + 'px';
+      fragment.appendChild(el);
+    }
+    // Añadir nubes dispersas
+    for(let i = 0; i < 3; i++){
+      const el = document.createElement('div');
+      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
+      el.style.width = 80 + Math.random() * 100 + 'px';
+      el.style.height = 30 + Math.random() * 35 + 'px';
+      el.style.top = 10 + Math.random() * 55 + '%';
+      el.style.animationDuration = 20 + Math.random() * 15 + 's';
+      el.style.animationDelay = -i * 5 + 's';
       fragment.appendChild(el);
     }
   }
-  else if(tipo === 'lluvia'){
-    for(let i = 0; i < cantidad; i++){
+  else if(tipo === 'llovizna'){
+    for(let i = 0; i < cantidad + 10; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
       el.style.left = Math.random() * 100 + '%';
       el.style.animationDuration = (0.3 + Math.random() * 0.4) + 's';
       el.style.animationDelay = Math.random() * 2 + 's';
-      el.style.height = (8 + Math.random() * 12) + 'px';
+      el.style.height = (6 + Math.random() * 10) + 'px';
+      el.style.width = '2px';
       fragment.appendChild(el);
     }
   }
   else if(tipo === 'nublado'){
-    for(let i = 0; i < 4; i++){
+    // Nubes grandes y densas
+    for(let i = 0; i < 5; i++){
       const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 70 + Math.random() * 100 + 'px';
-      el.style.height = 25 + Math.random() * 30 + 'px';
-      el.style.top = 10 + Math.random() * 55 + '%';
-      el.style.animationDuration = 18 + Math.random() * 12 + 's';
+      el.style.width = 100 + Math.random() * 130 + 'px';
+      el.style.height = 35 + Math.random() * 40 + 'px';
+      el.style.top = 10 + Math.random() * 60 + '%';
+      el.style.animationDuration = 22 + Math.random() * 14 + 's';
       el.style.animationDelay = -i * 4 + 's';
       fragment.appendChild(el);
     }
   }
   else if(tipo === 'nube'){
-    for(let i = 0; i < cantidad; i++){
+    for(let i = 0; i < cantidad + 2; i++){
       const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 60 + Math.random() * 80 + 'px';
-      el.style.height = 20 + Math.random() * 25 + 'px';
-      el.style.top = 15 + Math.random() * 50 + '%';
-      el.style.animationDuration = 15 + Math.random() * 15 + 's';
-      el.style.animationDelay = -i * 5 + 's';
+      el.style.width = 70 + Math.random() * 90 + 'px';
+      el.style.height = 25 + Math.random() * 30 + 'px';
+      el.style.top = 15 + Math.random() * 55 + '%';
+      el.style.animationDuration = 18 + Math.random() * 16 + 's';
+      el.style.animationDelay = -i * 6 + 's';
       fragment.appendChild(el);
     }
   }
@@ -537,41 +567,34 @@ function actualizarClimaFondo(desc, esNoche){
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
   
   const d = desc.toLowerCase();
-  console.log('🌦️ Efecto clima:', d);
+  console.log('🌦️ Efecto clima mejorado:', d);
   
   if(d.includes('tormenta')){
-    climaCapa.appendChild(crearElementosClima('tormenta', 50, esNoche));
+    climaCapa.appendChild(crearElementosClima('tormenta', 60, esNoche));
   }
   else if(d.includes('lluvia')){
-    climaCapa.appendChild(crearElementosClima('lluvia', 35, esNoche));
-    climaCapa.appendChild(crearElementosClima('nube', 2, esNoche));
+    climaCapa.appendChild(crearElementosClima('lluvia', 45, esNoche));
   }
   else if(d.includes('llovizna')){
-    climaCapa.appendChild(crearElementosClima('lluvia', 20, esNoche));
+    climaCapa.appendChild(crearElementosClima('llovizna', 25, esNoche));
   }
   else if(d.includes('nublado')){
-    climaCapa.appendChild(crearElementosClima('nublado', 4, esNoche));
+    climaCapa.appendChild(crearElementosClima('nublado', 5, esNoche));
   }
   else if(d.includes('parcialmente')){
-    climaCapa.appendChild(crearElementosClima('nube', 2, esNoche));
+    climaCapa.appendChild(crearElementosClima('nube', 3, esNoche));
   }
+  // Si es despejado, no agregamos nada (efecto limpio)
 }
 
-// ========== NUEVA FUNCIÓN DE CLIMA CON OPENWEATHERMAP ==========
+// ========== CLIMA CON OPENWEATHERMAP ==========
 function getDescripcionFromOWM(weatherId) {
-  // Tormentas
   if (weatherId >= 200 && weatherId < 300) return 'TORMENTA';
-  // Llovizna
   if (weatherId >= 300 && weatherId < 400) return 'LLOVIZNA';
-  // Lluvia
   if (weatherId >= 500 && weatherId < 600) return 'LLUVIA';
-  // Nieve (no es común en Tuluá, pero lo tratamos como lluvia para efectos)
   if (weatherId >= 600 && weatherId < 700) return 'LLUVIA';
-  // Niebla / bruma
   if (weatherId >= 700 && weatherId < 800) return 'NIEBLA';
-  // Despejado
   if (weatherId === 800) return 'DESPEJADO';
-  // Nubes (801-804)
   if (weatherId > 800 && weatherId <= 804) {
     if (weatherId === 801) return 'PARCIALMENTE NUBLADO';
     return 'NUBLADO';
@@ -590,9 +613,7 @@ function fetchClima() {
       const weatherId = data.weather[0].id;
       const descripcion = getDescripcionFromOWM(weatherId);
       const temp = Math.round(data.main.temp);
-      
-      // Determinar si es de día o noche usando sunrise/sunset (horarios UTC)
-      const nowUtc = data.dt; // timestamp actual (UTC)
+      const nowUtc = data.dt;
       const sunrise = data.sys.sunrise;
       const sunset = data.sys.sunset;
       const isDay = nowUtc >= sunrise && nowUtc < sunset;
@@ -607,7 +628,6 @@ function fetchClima() {
     })
     .catch(err => {
       console.warn('⚠️ Error al obtener clima de OpenWeatherMap:', err);
-      // No modificamos el clima actual; se mantiene el último estado exitoso
     });
 }
 
@@ -655,9 +675,9 @@ function actualizar(){
   }
 }
 
-// Iniciar todo
+// Iniciar: clima cada 108 segundos (800 llamadas/día), posición cada 500ms
 fetchClima();
-setInterval(fetchClima, 600000); // Cada 10 minutos → 144 llamadas/día (muy por debajo de 1000)
+setInterval(fetchClima, 108000); // 108000 ms = 108 segundos → 800 llamadas diarias
 setInterval(actualizar, 500);
 actualizar();
 </script>
