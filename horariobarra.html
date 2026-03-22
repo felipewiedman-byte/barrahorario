@@ -409,7 +409,7 @@ body{
 </div>
 
 <script>
-// ===== OPEN-METEO CLIMA EN TIEMPO REAL + SOL/LUNA CON FASES CORREGIDAS =====
+// ===== AHORA CON OPENWEATHERMAP API (CLIMA EN TIEMPO REAL) =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -425,6 +425,7 @@ const sombraLunar = document.getElementById("sombraLunar");
 
 const LAT = '4.08466';
 const LON = '-76.19536';
+const API_KEY = '04205bf1e16328632a481e8fae673e68';
 
 let climaActual = '';
 
@@ -439,52 +440,31 @@ function formatHora(h){
 }
 
 // ========== CÁLCULO DE FASE LUNAR CORREGIDO EN TIEMPO REAL ==========
-// Usamos una referencia de Luna Nueva exacta y reciente para máxima precisión.
-// Nueva Luna documentada: 19 de marzo de 2026 a las 10:23 UTC (fecha real)
-// Para fechas posteriores, el algoritmo mantiene exactitud gracias al ciclo sinódico.
 function calcularFaseLunar() {
-  // Referencia: Luna Nueva del 19 de marzo de 2026 a las 10:23 UTC
-  const newMoonDate = new Date(Date.UTC(2026, 2, 19, 10, 23, 0)); // Mes 2 = Marzo
+  const newMoonDate = new Date(Date.UTC(2026, 2, 19, 10, 23, 0));
   const ahora = new Date();
-  // Diferencia en milisegundos
   const diffMs = ahora - newMoonDate;
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  const cicloLunar = 29.53058867; // días
-  // Calculamos fase en el rango [0, 1)
+  const cicloLunar = 29.53058867;
   let fase = (diffDays % cicloLunar) / cicloLunar;
   if (fase < 0) fase += 1;
   return fase;
 }
 
-// ACTUALIZAR MÁSCARA DE FASE LUNAR
 function actualizarMascaraLunar(fase) {
   if (!sombraFase) return;
-  // fase: 0 = Luna Nueva, 0.5 = Luna Llena
-  // Calcular posición de la sombra para el efecto visual real:
-  // Para fases crecientes (0 -> 0.5): la sombra (parte oscura) se desplaza hacia la izquierda,
-  // dejando visible una creciente a la derecha.
-  // Para fases menguantes (0.5 -> 1): la sombra se desplaza hacia la derecha,
-  // dejando visible la parte izquierda.
   let cx;
   if (fase <= 0.5) {
-    // Creciente: sombra a la izquierda. En nueva (fase=0) cx=24 (centro, cubre todo).
-    // A medida que crece, la sombra se corre a la izquierda (cx decrece).
     cx = 24 - (fase * 48);
   } else {
-    // Menguante: sombra a la derecha. En llena (fase=0.5) cx=0 (fuera), en menguante avanza a la derecha.
     cx = 24 + ((fase - 0.5) * 48);
   }
-  // Limitar valores dentro del área visible
   cx = Math.max(0, Math.min(48, cx));
   sombraFase.setAttribute('cx', cx);
-  
-  // Log para depuración (opcional)
-  const fasePorcentaje = Math.round(fase * 100);
-  console.log(`🌙 Fase lunar real: ${fasePorcentaje}% | Posición sombra: ${Math.round(cx)}px`);
+  console.log(`🌙 Fase lunar real: ${Math.round(fase*100)}% | Posición sombra: ${Math.round(cx)}px`);
 }
 
 function getFaseLunarInfo(f) {
-  // Umbrales para los nombres y emojis según fase real
   if (f < 0.03 || f > 0.97) return { emoji: '🌑', nombre: 'Luna Nueva' };
   if (f < 0.23) return { emoji: '🌒', nombre: 'Creciente' };
   if (f < 0.27) return { emoji: '🌓', nombre: 'Cuarto Creciente' };
@@ -495,20 +475,7 @@ function getFaseLunarInfo(f) {
   return { emoji: '🌘', nombre: 'Menguante' };
 }
 
-function getDescripcionFromCode(code) {
-  code = parseInt(code);
-  if (code === 0) return 'DESPEJADO';
-  if (code === 1) return 'MAYORMENTE DESPEJADO';
-  if (code === 2) return 'PARCIALMENTE NUBLADO';
-  if (code === 3) return 'NUBLADO';
-  if (code >= 45 && code <= 48) return 'NIEBLA';
-  if ((code >= 51 && code <= 55) || (code >= 56 && code <= 57)) return 'LLOVIZNA';
-  if ((code >= 61 && code <= 65) || (code >= 66 && code <= 67)) return 'LLUVIA';
-  if ((code >= 71 && code <= 75) || (code >= 80 && code <= 82) || (code >= 85 && code <= 86)) return 'LLUVIA';
-  if (code >= 95) return 'TORMENTA';
-  return 'PARCIALMENTE NUBLADO';
-}
-
+// ========== FUNCIONES DE EFECTOS CLIMÁTICOS (NO TOCADAS) ==========
 function crearElementosClima(tipo, cantidad, esNoche){
   const fragment = document.createDocumentFragment();
   
@@ -516,7 +483,6 @@ function crearElementosClima(tipo, cantidad, esNoche){
     const rayoDiv = document.createElement('div');
     rayoDiv.className = 'rayo';
     fragment.appendChild(rayoDiv);
-    
     for(let i = 0; i < cantidad + 20; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
@@ -591,28 +557,61 @@ function actualizarClimaFondo(desc, esNoche){
   }
 }
 
-function fetchClima(){
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&timezone=auto`;
+// ========== NUEVA FUNCIÓN DE CLIMA CON OPENWEATHERMAP ==========
+function getDescripcionFromOWM(weatherId) {
+  // Tormentas
+  if (weatherId >= 200 && weatherId < 300) return 'TORMENTA';
+  // Llovizna
+  if (weatherId >= 300 && weatherId < 400) return 'LLOVIZNA';
+  // Lluvia
+  if (weatherId >= 500 && weatherId < 600) return 'LLUVIA';
+  // Nieve (no es común en Tuluá, pero lo tratamos como lluvia para efectos)
+  if (weatherId >= 600 && weatherId < 700) return 'LLUVIA';
+  // Niebla / bruma
+  if (weatherId >= 700 && weatherId < 800) return 'NIEBLA';
+  // Despejado
+  if (weatherId === 800) return 'DESPEJADO';
+  // Nubes (801-804)
+  if (weatherId > 800 && weatherId <= 804) {
+    if (weatherId === 801) return 'PARCIALMENTE NUBLADO';
+    return 'NUBLADO';
+  }
+  return 'PARCIALMENTE NUBLADO';
+}
+
+function fetchClima() {
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`;
   fetch(url)
-    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    })
     .then(data => {
-      const weather = data.current_weather;
-      const weatherCode = weather.weathercode;
-      const isDay = weather.is_day === 1;
-      const descripcion = getDescripcionFromCode(weatherCode);
-      const temp = weather.temperature;
+      const weatherId = data.weather[0].id;
+      const descripcion = getDescripcionFromOWM(weatherId);
+      const temp = Math.round(data.main.temp);
+      
+      // Determinar si es de día o noche usando sunrise/sunset (horarios UTC)
+      const nowUtc = data.dt; // timestamp actual (UTC)
+      const sunrise = data.sys.sunrise;
+      const sunset = data.sys.sunset;
+      const isDay = nowUtc >= sunrise && nowUtc < sunset;
       
       const descKey = descripcion + (isDay ? '-dia' : '-noche');
-      if(descKey !== climaActual){
+      if (descKey !== climaActual) {
         climaActual = descKey;
         actualizarClimaFondo(descripcion, !isDay);
       }
       
-      console.log(`🌡️ Tuluá: ${Math.round(temp)}°C | ${descripcion}`);
+      console.log(`🌡️ Tuluá: ${temp}°C | ${descripcion} | ${isDay ? 'DÍA' : 'NOCHE'}`);
     })
-    .catch(e => console.warn('⚠️ Clima offline:', e));
+    .catch(err => {
+      console.warn('⚠️ Error al obtener clima de OpenWeatherMap:', err);
+      // No modificamos el clima actual; se mantiene el último estado exitoso
+    });
 }
 
+// ========== ACTUALIZACIÓN DE POSICIÓN SOL/LUNA Y FASES ==========
 function actualizar(){
   let now = getHoraColombia();
   let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
@@ -627,7 +626,6 @@ function actualizar(){
 
   solTag.innerHTML = `☀️ ${formatHora(h)}`;
   
-  // CALCULAR FASE LUNAR REAL CORREGIDA
   const fase = calcularFaseLunar();
   const faseInfo = getFaseLunarInfo(fase);
   actualizarMascaraLunar(fase);
@@ -638,7 +636,6 @@ function actualizar(){
   let desplazamientoNoche = (lunaPos * 100) - 50;
   mascaraNoche.style.transform = `translateX(${desplazamientoNoche}%)`;
   
-  // Control día/noche
   if (h >= 6 && h < 18) {
     estrellas.style.opacity = '0';
     capaNoche.style.opacity = '0';
@@ -649,7 +646,6 @@ function actualizar(){
     capaNoche.style.opacity = '1';
     capaDia.style.opacity = '0';
     const distanciaCentro = Math.abs(lunaPos - 0.5) * 2;
-    // Brillo lunar basado en fase real
     const brilloLunar = fase < 0.03 || fase > 0.97 ? 0.2 :
                         fase > 0.47 && fase < 0.53 ? 0.8 : 0.5;
     sombraLunar.style.opacity = (distanciaCentro * (1 - brilloLunar * 0.7)).toString();
@@ -661,7 +657,7 @@ function actualizar(){
 
 // Iniciar todo
 fetchClima();
-setInterval(fetchClima, 600000); // Cada 10 minutos
+setInterval(fetchClima, 600000); // Cada 10 minutos → 144 llamadas/día (muy por debajo de 1000)
 setInterval(actualizar, 500);
 actualizar();
 </script>
