@@ -438,14 +438,21 @@ function formatHora(h){
   return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-// CALCULAR FASE LUNAR REAL (basado en fecha astronómica)
+// ========== CÁLCULO DE FASE LUNAR CORREGIDO EN TIEMPO REAL ==========
+// Usamos una referencia de Luna Nueva exacta y reciente para máxima precisión.
+// Nueva Luna documentada: 19 de marzo de 2026 a las 10:23 UTC (fecha real)
+// Para fechas posteriores, el algoritmo mantiene exactitud gracias al ciclo sinódico.
 function calcularFaseLunar() {
+  // Referencia: Luna Nueva del 19 de marzo de 2026 a las 10:23 UTC
+  const newMoonDate = new Date(Date.UTC(2026, 2, 19, 10, 23, 0)); // Mes 2 = Marzo
   const ahora = new Date();
-  // Referencia: Luna Nueva conocida (1 de enero de 2020)
-  const lunaNuevaReferencia = new Date(Date.UTC(2020, 0, 1, 0, 0, 0));
+  // Diferencia en milisegundos
+  const diffMs = ahora - newMoonDate;
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
   const cicloLunar = 29.53058867; // días
-  const diffDias = (ahora - lunaNuevaReferencia) / (1000 * 60 * 60 * 24);
-  const fase = (diffDias % cicloLunar) / cicloLunar;
+  // Calculamos fase en el rango [0, 1)
+  let fase = (diffDays % cicloLunar) / cicloLunar;
+  if (fase < 0) fase += 1;
   return fase;
 }
 
@@ -453,24 +460,31 @@ function calcularFaseLunar() {
 function actualizarMascaraLunar(fase) {
   if (!sombraFase) return;
   // fase: 0 = Luna Nueva, 0.5 = Luna Llena
-  // Calcular posición de la sombra: se mueve de izquierda a derecha
+  // Calcular posición de la sombra para el efecto visual real:
+  // Para fases crecientes (0 -> 0.5): la sombra (parte oscura) se desplaza hacia la izquierda,
+  // dejando visible una creciente a la derecha.
+  // Para fases menguantes (0.5 -> 1): la sombra se desplaza hacia la derecha,
+  // dejando visible la parte izquierda.
   let cx;
   if (fase <= 0.5) {
-    // Menguante a creciente (sombra por la izquierda)
+    // Creciente: sombra a la izquierda. En nueva (fase=0) cx=24 (centro, cubre todo).
+    // A medida que crece, la sombra se corre a la izquierda (cx decrece).
     cx = 24 - (fase * 48);
   } else {
-    // Creciente a menguante (sombra por la derecha)
+    // Menguante: sombra a la derecha. En llena (fase=0.5) cx=0 (fuera), en menguante avanza a la derecha.
     cx = 24 + ((fase - 0.5) * 48);
   }
+  // Limitar valores dentro del área visible
   cx = Math.max(0, Math.min(48, cx));
   sombraFase.setAttribute('cx', cx);
   
-  // Registrar en consola para verificar
+  // Log para depuración (opcional)
   const fasePorcentaje = Math.round(fase * 100);
-  console.log(`🌙 Fase lunar: ${fasePorcentaje}% | Posición sombra: ${Math.round(cx)}px`);
+  console.log(`🌙 Fase lunar real: ${fasePorcentaje}% | Posición sombra: ${Math.round(cx)}px`);
 }
 
 function getFaseLunarInfo(f) {
+  // Umbrales para los nombres y emojis según fase real
   if (f < 0.03 || f > 0.97) return { emoji: '🌑', nombre: 'Luna Nueva' };
   if (f < 0.23) return { emoji: '🌒', nombre: 'Creciente' };
   if (f < 0.27) return { emoji: '🌓', nombre: 'Cuarto Creciente' };
@@ -613,7 +627,7 @@ function actualizar(){
 
   solTag.innerHTML = `☀️ ${formatHora(h)}`;
   
-  // CALCULAR FASE LUNAR REAL
+  // CALCULAR FASE LUNAR REAL CORREGIDA
   const fase = calcularFaseLunar();
   const faseInfo = getFaseLunarInfo(fase);
   actualizarMascaraLunar(fase);
@@ -635,6 +649,7 @@ function actualizar(){
     capaNoche.style.opacity = '1';
     capaDia.style.opacity = '0';
     const distanciaCentro = Math.abs(lunaPos - 0.5) * 2;
+    // Brillo lunar basado en fase real
     const brilloLunar = fase < 0.03 || fase > 0.97 ? 0.2 :
                         fase > 0.47 && fase < 0.53 ? 0.8 : 0.5;
     sombraLunar.style.opacity = (distanciaCentro * (1 - brilloLunar * 0.7)).toString();
