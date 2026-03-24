@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Tuluá · Clima REAL con Nubes y Lluvia VISIBLES</title>
+<title>Solar Bar · Tuluá · Clima Sutil y Fluido</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
-/* ===== DISEÑO ORIGINAL CON MEJORAS DE Z-INDEX ===== */
+/* ===== DISEÑO BASE ===== */
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -143,7 +143,6 @@ body{
   height:2px;
   background:#fff;
   border-radius:50%;
-  box-shadow:0 0 4px rgba(255,255,255,0.5);
   animation:parpadear 1.5s ease-in-out infinite;
 }
 
@@ -249,45 +248,40 @@ body{
   z-index:9;
 }
 
-/* ===== EFECTOS DE CLIMA MÁS VISIBLES ===== */
+/* ===== EFECTOS CLIMÁTICOS SUAVES Y SIN BRILLOS ===== */
 .gota{
   position:absolute;
-  width:5px;
-  background:linear-gradient(180deg, rgba(100,180,255,0.95), rgba(50,120,200,0.9));
-  border-radius:0 0 4px 4px;
+  width:2px;
+  background:rgba(180, 220, 255, 0.8);
+  border-radius:0 0 2px 2px;
   animation:llover linear infinite;
   z-index:6;
-  box-shadow:0 0 3px rgba(100,180,255,0.8);
 }
 
 @keyframes llover{
-  0%{transform:translateY(-20px); opacity:0.9;}
-  20%{opacity:1;}
+  0%{transform:translateY(-20px); opacity:0.6;}
   100%{transform:translateY(150px); opacity:0;}
 }
 
 .gota-noche{
-  background:linear-gradient(180deg, rgba(150,200,255,0.95), rgba(80,130,220,0.9));
-  box-shadow:0 0 5px rgba(150,200,255,0.8);
+  background:rgba(140, 180, 230, 0.7);
 }
 
 .nube{
   position:absolute;
-  background:rgba(255,255,245,0.95);  /* Más opaca para día */
+  background:rgba(255,255,245,0.65);
   border-radius:50px;
-  filter:blur(8px);
+  filter:blur(6px);
   animation:flotarNube linear infinite;
   z-index:6;
-  box-shadow:0 0 20px rgba(255,255,255,0.8);
 }
 
 .nube-dia{
-  background:rgba(255,255,245,0.95);
+  background:rgba(255,255,245,0.7);
 }
 
 .nube-noche{
-  background:rgba(210,230,250,0.85);  /* Más brillante en noche */
-  box-shadow:0 0 25px rgba(180,220,255,0.9);
+  background:rgba(200,210,230,0.6);
 }
 
 @keyframes flotarNube{
@@ -299,7 +293,7 @@ body{
   position:absolute;
   width:100%;
   height:100%;
-  background:radial-gradient(circle at 50% 40%, rgba(255,255,200,0.9), rgba(255,200,100,0.6), transparent);
+  background:radial-gradient(circle at 50% 40%, rgba(255,255,200,0.6), rgba(255,200,100,0.3), transparent);
   opacity:0;
   animation:relampago 4s infinite;
   z-index:6;
@@ -308,10 +302,10 @@ body{
 
 @keyframes relampago{
   0%,92%,94%,96%,98%,100%{opacity:0;}
-  93%{opacity:0.8;}
-  95%{opacity:1;}
-  97%{opacity:0.6;}
-  99%{opacity:0.3;}
+  93%{opacity:0.6;}
+  95%{opacity:0.8;}
+  97%{opacity:0.4;}
+  99%{opacity:0.2;}
 }
 </style>
 </head>
@@ -328,7 +322,7 @@ body{
 
   <div class="sombra-lunar" id="sombraLunar"></div>
 
-  <!-- CAPA DE CLIMA (z-index elevado para que quede sobre máscaras pero bajo el horizonte) -->
+  <!-- CAPA DE CLIMA -->
   <div id="climaCapa" style="position:absolute; width:100%; height:100%; z-index:12; pointer-events:none; overflow:hidden; border-radius:24px;"></div>
 
   <div class="estrellas" id="estrellas">
@@ -374,7 +368,7 @@ body{
     <div id="solTag" class="tag sol-tag">☀️ 00:00</div>
   </div>
 
-  <!-- LUNA CON FASES REALES -->
+  <!-- LUNA -->
   <div id="luna" class="astro">
     <svg viewBox="0 0 48 48" id="lunaSvg">
       <defs>
@@ -402,7 +396,7 @@ body{
 </div>
 
 <script>
-// ===== CONFIGURACIÓN CON WEATHERAPI (CLAVE NUEVA) =====
+// ===== CONFIGURACIÓN WEATHERAPI =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -430,7 +424,7 @@ function formatHora(h){
   return `${String(H).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-// ========== CÁLCULO DE FASE LUNAR ==========
+// ========== FASE LUNAR ==========
 function calcularFaseLunar() {
   const newMoonDate = new Date(Date.UTC(2026, 2, 19, 10, 23, 0));
   const ahora = new Date();
@@ -465,7 +459,7 @@ function getFaseLunarInfo(f) {
   return { emoji: '🌘', nombre: 'Menguante' };
 }
 
-// ========== EFECTOS CLIMÁTICOS MEJORADOS ==========
+// ========== EFECTOS CLIMÁTICOS SUAVES ==========
 function crearElementosClima(tipo, cantidad, esNoche){
   const fragment = document.createDocumentFragment();
   
@@ -473,83 +467,92 @@ function crearElementosClima(tipo, cantidad, esNoche){
     const rayoDiv = document.createElement('div');
     rayoDiv.className = 'rayo';
     fragment.appendChild(rayoDiv);
-    for(let i = 0; i < cantidad + 40; i++){
+    for(let i = 0; i < cantidad; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
       el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = (0.12 + Math.random() * 0.2) + 's';
+      el.style.animationDuration = (0.2 + Math.random() * 0.3) + 's';
       el.style.animationDelay = Math.random() * 2 + 's';
-      el.style.height = (15 + Math.random() * 20) + 'px';
-      el.style.width = (4 + Math.random() * 4) + 'px';
+      el.style.height = (6 + Math.random() * 8) + 'px';
+      el.style.width = '2px';
+      fragment.appendChild(el);
+    }
+    for(let i = 0; i < 3; i++){
+      const el = document.createElement('div');
+      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
+      el.style.width = 80 + Math.random() * 100 + 'px';
+      el.style.height = 30 + Math.random() * 30 + 'px';
+      el.style.top = 10 + Math.random() * 55 + '%';
+      el.style.animationDuration = 18 + Math.random() * 12 + 's';
+      el.style.animationDelay = -i * 5 + 's';
       fragment.appendChild(el);
     }
   }
   else if(tipo === 'lluvia'){
-    for(let i = 0; i < cantidad + 50; i++){
+    for(let i = 0; i < cantidad; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
       el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = (0.15 + Math.random() * 0.25) + 's';
-      el.style.animationDelay = Math.random() * 2 + 's';
-      el.style.height = (12 + Math.random() * 18) + 'px';
-      el.style.width = (4 + Math.random() * 3) + 'px';
-      fragment.appendChild(el);
-    }
-    for(let i = 0; i < 4; i++){
-      const el = document.createElement('div');
-      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 80 + Math.random() * 110 + 'px';
-      el.style.height = 30 + Math.random() * 40 + 'px';
-      el.style.top = 10 + Math.random() * 55 + '%';
-      el.style.animationDuration = 18 + Math.random() * 14 + 's';
-      el.style.animationDelay = -i * 4 + 's';
-      fragment.appendChild(el);
-    }
-  }
-  else if(tipo === 'llovizna'){
-    for(let i = 0; i < cantidad + 25; i++){
-      const el = document.createElement('div');
-      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
-      el.style.left = Math.random() * 100 + '%';
-      el.style.animationDuration = (0.25 + Math.random() * 0.35) + 's';
+      el.style.animationDuration = (0.2 + Math.random() * 0.3) + 's';
       el.style.animationDelay = Math.random() * 2 + 's';
       el.style.height = (6 + Math.random() * 10) + 'px';
       el.style.width = '2px';
       fragment.appendChild(el);
     }
-    for(let i = 0; i < 2; i++){
+    for(let i = 0; i < 3; i++){
       const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
       el.style.width = 80 + Math.random() * 100 + 'px';
-      el.style.height = 25 + Math.random() * 30 + 'px';
-      el.style.top = 15 + Math.random() * 55 + '%';
-      el.style.animationDuration = 20 + Math.random() * 12 + 's';
+      el.style.height = 30 + Math.random() * 35 + 'px';
+      el.style.top = 10 + Math.random() * 55 + '%';
+      el.style.animationDuration = 18 + Math.random() * 14 + 's';
       el.style.animationDelay = -i * 5 + 's';
       fragment.appendChild(el);
     }
   }
-  else if(tipo === 'nublado'){
-    // nubes grandes y abundantes
-    for(let i = 0; i < 8; i++){
+  else if(tipo === 'llovizna'){
+    for(let i = 0; i < cantidad; i++){
+      const el = document.createElement('div');
+      el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (0.3 + Math.random() * 0.4) + 's';
+      el.style.animationDelay = Math.random() * 2 + 's';
+      el.style.height = (4 + Math.random() * 6) + 'px';
+      el.style.width = '1.5px';
+      fragment.appendChild(el);
+    }
+    for(let i = 0; i < 2; i++){
       const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 100 + Math.random() * 140 + 'px';
-      el.style.height = 35 + Math.random() * 45 + 'px';
+      el.style.width = 70 + Math.random() * 90 + 'px';
+      el.style.height = 25 + Math.random() * 25 + 'px';
+      el.style.top = 15 + Math.random() * 55 + '%';
+      el.style.animationDuration = 20 + Math.random() * 12 + 's';
+      el.style.animationDelay = -i * 6 + 's';
+      fragment.appendChild(el);
+    }
+  }
+  else if(tipo === 'nublado'){
+    for(let i = 0; i < 5; i++){
+      const el = document.createElement('div');
+      el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
+      el.style.width = 90 + Math.random() * 110 + 'px';
+      el.style.height = 30 + Math.random() * 35 + 'px';
       el.style.top = 10 + Math.random() * 60 + '%';
-      el.style.animationDuration = 22 + Math.random() * 14 + 's';
+      el.style.animationDuration = 22 + Math.random() * 12 + 's';
       el.style.animationDelay = -i * 4 + 's';
       fragment.appendChild(el);
     }
   }
   else if(tipo === 'nube'){
-    for(let i = 0; i < cantidad + 3; i++){
+    for(let i = 0; i < 2; i++){
       const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
-      el.style.width = 70 + Math.random() * 90 + 'px';
-      el.style.height = 25 + Math.random() * 30 + 'px';
+      el.style.width = 70 + Math.random() * 80 + 'px';
+      el.style.height = 25 + Math.random() * 25 + 'px';
       el.style.top = 15 + Math.random() * 55 + '%';
-      el.style.animationDuration = 18 + Math.random() * 16 + 's';
-      el.style.animationDelay = -i * 6 + 's';
+      el.style.animationDuration = 18 + Math.random() * 14 + 's';
+      el.style.animationDelay = -i * 7 + 's';
       fragment.appendChild(el);
     }
   }
@@ -562,9 +565,8 @@ function actualizarClimaFondo(condicionTexto, esNoche){
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
   
   const texto = condicionTexto.toLowerCase();
-  console.log(`🌦️ Condición recibida: "${condicionTexto}" (esNoche=${esNoche})`);
+  console.log(`🌦️ Condición: "${condicionTexto}" (noche=${esNoche})`);
   
-  // ===== MAPEO AMPLIADO PARA ESPAÑOL =====
   let efecto = null;
   
   if(texto.includes('tormenta') || texto.includes('trueno') || texto.includes('storm')){
@@ -590,43 +592,39 @@ function actualizarClimaFondo(condicionTexto, esNoche){
   }
   
   if(efecto){
-    console.log(`✅ Aplicando efecto: ${efecto}`);
-    if(efecto === 'tormenta') climaCapa.appendChild(crearElementosClima('tormenta', 70, esNoche));
-    else if(efecto === 'lluvia') climaCapa.appendChild(crearElementosClima('lluvia', 70, esNoche));
-    else if(efecto === 'llovizna') climaCapa.appendChild(crearElementosClima('llovizna', 35, esNoche));
-    else if(efecto === 'nublado') climaCapa.appendChild(crearElementosClima('nublado', 8, esNoche));
-    else if(efecto === 'nube') climaCapa.appendChild(crearElementosClima('nube', 4, esNoche));
+    let cantidad = 0;
+    if(efecto === 'tormenta') cantidad = 45;
+    else if(efecto === 'lluvia') cantidad = 40;
+    else if(efecto === 'llovizna') cantidad = 25;
+    else if(efecto === 'nublado') cantidad = 5;
+    else if(efecto === 'nube') cantidad = 2;
+    climaCapa.appendChild(crearElementosClima(efecto, cantidad, esNoche));
+    console.log(`✅ Efecto aplicado: ${efecto}`);
   } else {
-    console.log('☀️ Clima despejado: sin efectos adicionales');
+    console.log('☀️ Sin efectos (despejado)');
   }
 }
 
-// ========== CLIMA CON WEATHERAPI ==========
+// ========== OBTENER CLIMA ==========
 function fetchClima() {
   const url = `https://api.weatherapi.com/v1/current.json?key=${WEATHERAPI_KEY}&q=${LAT},${LON}&lang=es`;
   
   fetch(url)
     .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     })
     .then(data => {
       const condition = data.current.condition.text;
       const temp = data.current.temp_c;
       const isDay = data.current.is_day === 1;
-      
-      console.log(`🌡️ Tuluá: ${temp}°C | Condición real: ${condition} | ${isDay ? 'DÍA' : 'NOCHE'}`);
-      
+      console.log(`🌡️ Tuluá: ${temp}°C | ${condition} | ${isDay ? 'DÍA' : 'NOCHE'}`);
       actualizarClimaFondo(condition, !isDay);
     })
-    .catch(err => {
-      console.error('❌ Error al obtener clima de WeatherAPI:', err);
-    });
+    .catch(err => console.error('Error clima:', err));
 }
 
-// ========== ACTUALIZACIÓN DE POSICIÓN SOL/LUNA Y FASES ==========
+// ========== MOVIMIENTO SOL/LUNA ==========
 function actualizar(){
   let now = getHoraColombia();
   let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
@@ -669,7 +667,6 @@ function actualizar(){
   }
 }
 
-// Iniciar
 fetchClima();
 setInterval(fetchClima, 108000);
 setInterval(actualizar, 500);
