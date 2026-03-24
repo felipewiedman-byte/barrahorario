@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Tiempo Real · Tuluá · Clima Dinámico + Lluvia Visible</title>
+<title>Solar Bar · Tiempo Real · Tuluá · WeatherAPI · Lluvia Dinámica</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -402,7 +402,7 @@ body{
 </div>
 
 <script>
-// ===== CONFIGURACIÓN CON OPENWEATHERMAP =====
+// ===== CONFIGURACIÓN CON WEATHERAPI (NUEVA) =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -418,9 +418,7 @@ const sombraLunar = document.getElementById("sombraLunar");
 
 const LAT = '4.08466';
 const LON = '-76.19536';
-const API_KEY = '04205bf1e16328632a481e8fae673e68';
-
-let climaActual = '';
+const WEATHERAPI_KEY = 'ed887c7d96664bedad980752262403';  // Tu nueva clave
 
 function getHoraColombia(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
@@ -475,7 +473,6 @@ function crearElementosClima(tipo, cantidad, esNoche){
     const rayoDiv = document.createElement('div');
     rayoDiv.className = 'rayo';
     fragment.appendChild(rayoDiv);
-    // gotas abundantes
     for(let i = 0; i < cantidad + 40; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
@@ -488,7 +485,6 @@ function crearElementosClima(tipo, cantidad, esNoche){
     }
   }
   else if(tipo === 'lluvia'){
-    // gotas grandes y abundantes
     for(let i = 0; i < cantidad + 50; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
@@ -499,7 +495,6 @@ function crearElementosClima(tipo, cantidad, esNoche){
       el.style.width = (4 + Math.random() * 3) + 'px';
       fragment.appendChild(el);
     }
-    // nubes acompañantes
     for(let i = 0; i < 4; i++){
       const el = document.createElement('div');
       el.className = `nube ${esNoche ? 'nube-noche' : 'nube-dia'}`;
@@ -512,7 +507,6 @@ function crearElementosClima(tipo, cantidad, esNoche){
     }
   }
   else if(tipo === 'llovizna'){
-    // gotas más pequeñas pero aún visibles
     for(let i = 0; i < cantidad + 25; i++){
       const el = document.createElement('div');
       el.className = `gota ${esNoche ? 'gota-noche' : ''}`;
@@ -561,30 +555,28 @@ function crearElementosClima(tipo, cantidad, esNoche){
   return fragment;
 }
 
-function actualizarClimaFondo(desc, esNoche){
+function actualizarClimaFondo(condicionTexto, esNoche){
   if(!climaCapa) return;
   
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
   
-  const d = desc.toLowerCase();
-  console.log(`🌦️ Aplicando efecto climático: "${desc}" (esNoche=${esNoche})`);
+  const texto = condicionTexto.toLowerCase();
+  console.log(`🌦️ Condición recibida: "${condicionTexto}" (esNoche=${esNoche})`);
   
-  // Forzar lluvia para prueba (descomentar la línea siguiente para probar)
-  // if(true) { climaCapa.appendChild(crearElementosClima('lluvia', 80, esNoche)); return; }
-  
-  if(d.includes('tormenta') || d.includes('storm')){
+  // Mapeo amplio para capturar lluvia en español
+  if(texto.includes('tormenta') || texto.includes('storm') || texto.includes('trueno')){
     climaCapa.appendChild(crearElementosClima('tormenta', 70, esNoche));
   }
-  else if(d.includes('lluvia') || d.includes('rain') || d.includes('chubasco') || d.includes('shower')){
+  else if(texto.includes('lluvia') || texto.includes('rain') || texto.includes('chubasco') || texto.includes('aguacero') || texto.includes('chaparrón')){
     climaCapa.appendChild(crearElementosClima('lluvia', 70, esNoche));
   }
-  else if(d.includes('llovizna') || d.includes('drizzle')){
+  else if(texto.includes('llovizna') || texto.includes('drizzle') || texto.includes('garúa')){
     climaCapa.appendChild(crearElementosClima('llovizna', 35, esNoche));
   }
-  else if(d.includes('nublado') || d.includes('cloudy')){
+  else if(texto.includes('nublado') || texto.includes('cloudy') || texto.includes('muy nuboso') || texto.includes('cubierto')){
     climaCapa.appendChild(crearElementosClima('nublado', 6, esNoche));
   }
-  else if(d.includes('parcialmente') || d.includes('nube') || d.includes('few clouds')){
+  else if(texto.includes('parcialmente') || texto.includes('nube') || texto.includes('poco nuboso') || texto.includes('mayormente nublado')){
     climaCapa.appendChild(crearElementosClima('nube', 4, esNoche));
   }
   else {
@@ -592,23 +584,10 @@ function actualizarClimaFondo(desc, esNoche){
   }
 }
 
-// ========== CLIMA CON OPENWEATHERMAP ==========
-function getDescripcionFromOWM(weatherId) {
-  if (weatherId >= 200 && weatherId < 300) return 'TORMENTA';
-  if (weatherId >= 300 && weatherId < 400) return 'LLOVIZNA';
-  if (weatherId >= 500 && weatherId < 600) return 'LLUVIA';
-  if (weatherId >= 600 && weatherId < 700) return 'LLUVIA';   // nieve como lluvia
-  if (weatherId >= 700 && weatherId < 800) return 'NIEBLA';
-  if (weatherId === 800) return 'DESPEJADO';
-  if (weatherId > 800 && weatherId <= 804) {
-    if (weatherId === 801) return 'PARCIALMENTE NUBLADO';
-    return 'NUBLADO';
-  }
-  return 'PARCIALMENTE NUBLADO';
-}
-
+// ========== CLIMA CON WEATHERAPI ==========
 function fetchClima() {
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=es`;
+  // Construir URL con latitud y longitud (formato "lat,lon")
+  const url = `https://api.weatherapi.com/v1/current.json?key=${WEATHERAPI_KEY}&q=${LAT},${LON}&lang=es`;
   
   fetch(url)
     .then(response => {
@@ -618,21 +597,17 @@ function fetchClima() {
       return response.json();
     })
     .then(data => {
-      const weatherId = data.weather[0].id;
-      const descripcion = getDescripcionFromOWM(weatherId);
-      const temp = Math.round(data.main.temp);
-      const nowUtc = data.dt;
-      const sunrise = data.sys.sunrise;
-      const sunset = data.sys.sunset;
-      const isDay = nowUtc >= sunrise && nowUtc < sunset;
+      const condition = data.current.condition.text;  // Texto en español (ej. "Lluvia ligera")
+      const temp = data.current.temp_c;
+      const isDay = data.current.is_day === 1;        // 1 = día, 0 = noche
       
-      console.log(`🌡️ Tuluá: ${temp}°C | Condición real: ${data.weather[0].description} (ID ${weatherId}) → Efecto: ${descripcion} | ${isDay ? 'DÍA' : 'NOCHE'}`);
+      console.log(`🌡️ Tuluá: ${temp}°C | Condición real: ${condition} | ${isDay ? 'DÍA' : 'NOCHE'}`);
       
-      // Actualizar efectos climáticos
-      actualizarClimaFondo(descripcion, !isDay);
+      // Actualizar efectos climáticos (pasar condición original)
+      actualizarClimaFondo(condition, !isDay);
     })
     .catch(err => {
-      console.error('❌ Error al obtener clima de OpenWeatherMap:', err);
+      console.error('❌ Error al obtener clima de WeatherAPI:', err);
       console.warn('⚠️ Verifica tu conexión a Internet y que la API key sea válida.');
     });
 }
@@ -641,7 +616,6 @@ function fetchClima() {
 function actualizar(){
   let now = getHoraColombia();
   let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
-  let esNoche = now.getHours() < 6 || now.getHours() >= 18;
 
   let solPos = h / 24;
   let lunaPos = (h + 12) / 24;
@@ -683,11 +657,9 @@ function actualizar(){
 
 // Iniciar
 fetchClima();
-setInterval(fetchClima, 108000);
+setInterval(fetchClima, 108000);  // Cada 108 segundos (aprox 800 veces al día)
 setInterval(actualizar, 500);
 actualizar();
-
-// (Opcional) Forzar una prueba de lluvia descomentando la línea dentro de actualizarClimaFondo
 </script>
 </body>
 </html>
