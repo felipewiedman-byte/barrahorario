@@ -2,10 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Tuluá · Clima Sutil con Rayos y Gotas Finas</title>
+<title>Solar Bar · Tuluá · Clima con WeatherAPI (CORS Fixed)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
+/* ===== DISEÑO ORIGINAL SIN BARRA INFERIOR ===== */
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -392,6 +393,7 @@ body{
 </div>
 
 <script>
+// ===== CONFIGURACIÓN CON WEATHERAPI (CORS FIX) =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -566,7 +568,7 @@ function actualizarClimaFondo(condicionTexto, esNoche){
   else if(texto.includes('lluvia') || texto.includes('precipitaciones') || 
           texto.includes('aguacero') || texto.includes('chaparrón') || 
           texto.includes('chubasco') || texto.includes('rain') || 
-          texto.includes('shower')){
+          texto.includes('shower') || texto.includes('ligeras')){
     efecto = 'lluvia';
   }
   else if(texto.includes('llovizna') || texto.includes('garúa') || texto.includes('drizzle')){
@@ -596,23 +598,32 @@ function actualizarClimaFondo(condicionTexto, esNoche){
   }
 }
 
-function fetchClima() {
-  const url = `https://api.weatherapi.com/v1/current.json?key=${WEATHERAPI_KEY}&q=${LAT},${LON}&lang=es`;
-  fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json();
-    })
-    .then(data => {
-      const condition = data.current.condition.text;
-      const temp = data.current.temp_c;
-      const isDay = data.current.is_day === 1;
-      console.log(`🌡️ Tuluá: ${temp}°C | ${condition} | ${isDay ? 'DÍA' : 'NOCHE'}`);
-      actualizarClimaFondo(condition, !isDay);
-    })
-    .catch(err => console.error('Error clima:', err));
+// ========== OBTENER CLIMA CON PROXY CORS ==========
+async function fetchClima() {
+  // Construir URL de WeatherAPI
+  const apiUrl = `https://api.weatherapi.com/v1/current.json?key=${WEATHERAPI_KEY}&q=${LAT},${LON}&lang=es`;
+  // Usar proxy CORS (corsproxy.io)
+  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+  
+  try {
+    const response = await fetch(proxyUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+    }
+    const data = await response.json();
+    
+    const condition = data.current.condition.text;
+    const temp = data.current.temp_c;
+    const isDay = (data.current.is_day === 1);
+    
+    console.log(`🌡️ Tuluá: ${temp}°C | ${condition} | ${isDay ? 'DÍA' : 'NOCHE'}`);
+    actualizarClimaFondo(condition, !isDay);
+  } catch (err) {
+    console.error('❌ Error clima:', err);
+  }
 }
 
+// ========== MOVIMIENTO SOL/LUNA ==========
 function actualizar(){
   let now = getHoraColombia();
   let h = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
