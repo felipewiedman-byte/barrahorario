@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Solar Bar · Tuluá · Clima con WeatherAPI (CORS Fixed)</title>
+<title>Solar Bar · Tuluá · Clima en Tiempo Real (Open-Meteo)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -393,7 +393,7 @@ body{
 </div>
 
 <script>
-// ===== CONFIGURACIÓN CON WEATHERAPI (CORS FIX) =====
+// ===== CONFIGURACIÓN CON OPEN-METEO (GRATIS, SIN CORS) =====
 const sol = document.getElementById("sol");
 const luna = document.getElementById("luna");
 const solTag = document.getElementById("solTag");
@@ -407,9 +407,8 @@ const capaNoche = document.getElementById("capaNoche");
 const climaCapa = document.getElementById("climaCapa");
 const sombraLunar = document.getElementById("sombraLunar");
 
-const LAT = '4.08466';
-const LON = '-76.19536';
-const WEATHERAPI_KEY = 'ed887c7d96664bedad980752262403';
+const LAT = 4.08466;
+const LON = -76.19536;
 
 function getHoraColombia(){
   return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Bogota"}));
@@ -554,72 +553,126 @@ function crearElementosClima(tipo, cantidad, esNoche){
   return fragment;
 }
 
-function actualizarClimaFondo(condicionTexto, esNoche){
+function actualizarClimaFondo(weatherCode, esNoche){
   if(!climaCapa) return;
   while(climaCapa.firstChild) climaCapa.removeChild(climaCapa.firstChild);
   
-  const texto = condicionTexto.toLowerCase();
-  console.log(`🌦️ Condición: "${condicionTexto}" (noche=${esNoche})`);
-  
+  // Mapeo de códigos de Open-Meteo a efectos visuales
   let efecto = null;
-  if(texto.includes('tormenta') || texto.includes('trueno') || texto.includes('storm')){
-    efecto = 'tormenta';
-  }
-  else if(texto.includes('lluvia') || texto.includes('precipitaciones') || 
-          texto.includes('aguacero') || texto.includes('chaparrón') || 
-          texto.includes('chubasco') || texto.includes('rain') || 
-          texto.includes('shower') || texto.includes('ligeras')){
-    efecto = 'lluvia';
-  }
-  else if(texto.includes('llovizna') || texto.includes('garúa') || texto.includes('drizzle')){
-    efecto = 'llovizna';
-  }
-  else if(texto.includes('nublado') || texto.includes('cubierto') || 
-          texto.includes('nubes') || texto.includes('cloudy') || 
-          texto.includes('overcast')){
-    efecto = 'nublado';
-  }
-  else if(texto.includes('parcialmente') || texto.includes('poco nuboso') || 
-          texto.includes('mayormente nublado') || texto.includes('few clouds')){
+  let cantidad = 0;
+  
+  // Códigos: https://open-meteo.com/en/docs
+  if (weatherCode === 0) {
+    // Despejado
+    efecto = null;
+  } else if (weatherCode === 1 || weatherCode === 2) {
+    // Mayormente despejado o parcialmente nublado
     efecto = 'nube';
+    cantidad = 2;
+  } else if (weatherCode === 3) {
+    // Nublado
+    efecto = 'nublado';
+    cantidad = 5;
+  } else if (weatherCode === 45 || weatherCode === 48) {
+    // Niebla
+    efecto = 'nublado';
+    cantidad = 4;
+  } else if ((weatherCode >= 51 && weatherCode <= 57) || (weatherCode >= 61 && weatherCode <= 67)) {
+    // Llovizna o lluvia ligera
+    efecto = 'llovizna';
+    cantidad = 25;
+  } else if ((weatherCode >= 71 && weatherCode <= 77) || (weatherCode >= 80 && weatherCode <= 82)) {
+    // Lluvia moderada o intensa
+    efecto = 'lluvia';
+    cantidad = 40;
+  } else if (weatherCode >= 95 && weatherCode <= 99) {
+    // Tormenta
+    efecto = 'tormenta';
+    cantidad = 45;
+  } else {
+    // Por defecto, si hay algún otro código (ej. 85,86 nieve) se trata como lluvia
+    if (weatherCode >= 85 && weatherCode <= 86) {
+      efecto = 'lluvia';
+      cantidad = 40;
+    } else {
+      efecto = null;
+    }
   }
   
-  if(efecto){
-    let cantidad = 0;
-    if(efecto === 'tormenta') cantidad = 45;
-    else if(efecto === 'lluvia') cantidad = 40;
-    else if(efecto === 'llovizna') cantidad = 25;
-    else if(efecto === 'nublado') cantidad = 5;
-    else if(efecto === 'nube') cantidad = 2;
+  if (efecto) {
     climaCapa.appendChild(crearElementosClima(efecto, cantidad, esNoche));
-    console.log(`✅ Efecto aplicado: ${efecto}`);
+    console.log(`🌧️ Efecto aplicado: ${efecto} (código ${weatherCode})`);
   } else {
-    console.log('☀️ Sin efectos (despejado)');
+    console.log(`☀️ Sin efectos (código ${weatherCode} - despejado)`);
   }
 }
 
-// ========== OBTENER CLIMA CON PROXY CORS ==========
+// ========== OBTENER CLIMA CON OPEN-METEO (SIN CORS, GRATIS) ==========
 async function fetchClima() {
-  // Construir URL de WeatherAPI
-  const apiUrl = `https://api.weatherapi.com/v1/current.json?key=${WEATHERAPI_KEY}&q=${LAT},${LON}&lang=es`;
-  // Usar proxy CORS (corsproxy.io)
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+  // Usamos Open-Meteo, que devuelve datos actuales sin necesidad de clave y con CORS habilitado
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&timezone=auto`;
   
   try {
-    const response = await fetch(proxyUrl);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status} - ${response.statusText}`);
     }
     const data = await response.json();
     
-    const condition = data.current.condition.text;
-    const temp = data.current.temp_c;
-    const isDay = (data.current.is_day === 1);
+    if (!data.current_weather) {
+      throw new Error("Respuesta sin current_weather");
+    }
     
-    console.log(`🌡️ Tuluá: ${temp}°C | ${condition} | ${isDay ? 'DÍA' : 'NOCHE'}`);
-    actualizarClimaFondo(condition, !isDay);
+    const weatherCode = data.current_weather.weathercode;
+    const temperature = data.current_weather.temperature;
+    
+    // Determinar si es día o noche con la hora local (ya que Open-Meteo no envía is_day en current_weather)
+    const now = getHoraColombia();
+    const hour = now.getHours();
+    const esNoche = (hour < 6 || hour >= 18);
+    
+    // Traducir código a texto descriptivo para log
+    let condicionTexto = "";
+    switch(weatherCode) {
+      case 0: condicionTexto = "Despejado"; break;
+      case 1: condicionTexto = "Mayormente despejado"; break;
+      case 2: condicionTexto = "Parcialmente nublado"; break;
+      case 3: condicionTexto = "Nublado"; break;
+      case 45: condicionTexto = "Niebla"; break;
+      case 48: condicionTexto = "Niebla helada"; break;
+      case 51: condicionTexto = "Llovizna ligera"; break;
+      case 53: condicionTexto = "Llovizna moderada"; break;
+      case 55: condicionTexto = "Llovizna densa"; break;
+      case 56: condicionTexto = "Llovizna helada"; break;
+      case 57: condicionTexto = "Llovizna helada densa"; break;
+      case 61: condicionTexto = "Lluvia ligera"; break;
+      case 63: condicionTexto = "Lluvia moderada"; break;
+      case 65: condicionTexto = "Lluvia intensa"; break;
+      case 66: condicionTexto = "Lluvia helada ligera"; break;
+      case 67: condicionTexto = "Lluvia helada intensa"; break;
+      case 71: condicionTexto = "Nevada ligera"; break;
+      case 73: condicionTexto = "Nevada moderada"; break;
+      case 75: condicionTexto = "Nevada intensa"; break;
+      case 77: condicionTexto = "Granizo pequeño"; break;
+      case 80: condicionTexto = "Chubasco ligero"; break;
+      case 81: condicionTexto = "Chubasco moderado"; break;
+      case 82: condicionTexto = "Chubasco violento"; break;
+      case 85: condicionTexto = "Chubasco de nieve ligero"; break;
+      case 86: condicionTexto = "Chubasco de nieve intenso"; break;
+      case 95: condicionTexto = "Tormenta"; break;
+      case 96: condicionTexto = "Tormenta con granizo ligero"; break;
+      case 99: condicionTexto = "Tormenta con granizo intenso"; break;
+      default: condicionTexto = "Condición variable";
+    }
+    
+    console.log(`🌡️ Tuluá: ${temperature}°C | ${condicionTexto} (código ${weatherCode}) | ${esNoche ? 'NOCHE' : 'DÍA'}`);
+    
+    // Aplicar efectos climáticos
+    actualizarClimaFondo(weatherCode, esNoche);
+    
   } catch (err) {
-    console.error('❌ Error clima:', err);
+    console.error('❌ Error al obtener clima desde Open-Meteo:', err);
+    // No se borran efectos anteriores para no dejar la barra vacía
   }
 }
 
@@ -666,8 +719,9 @@ function actualizar(){
   }
 }
 
+// Ejecutar clima al cargar y cada 10 minutos (600000 ms) para respetar límites
 fetchClima();
-setInterval(fetchClima, 108000);
+setInterval(fetchClima, 600000);
 setInterval(actualizar, 500);
 actualizar();
 </script>
